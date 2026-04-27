@@ -21,11 +21,10 @@ function RootNavigator() {
     if (auth.status === 'loading') return;
 
     const inAuthGroup = segments[0] === 'auth';
-    const inOnboarding = segments[0] === 'onboarding';
 
     if (auth.status === 'unauthenticated' && !inAuthGroup) {
       router.replace('/auth/sign-in');
-    } else if (auth.status === 'authenticated' && (inAuthGroup || inOnboarding)) {
+    } else if (auth.status === 'authenticated' && inAuthGroup) {
       router.replace('/(tabs)');
     }
   }, [auth.status, segments]);
