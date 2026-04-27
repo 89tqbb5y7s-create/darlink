@@ -83,15 +83,17 @@ export const respond = mutation({
         .query("chats")
         .withIndex("by_match", (q) => q.eq("matchId", matchId))
         .unique();
-      if (!existingChat) {
-        await ctx.db.insert("chats", {
-          matchId,
-          participantIds: [updated.userIdA, updated.userIdB],
-          lastMessageAt: Date.now(),
-        });
+      if (existingChat) {
+        return { match: updated, chatId: existingChat._id };
       }
+      const chatId = await ctx.db.insert("chats", {
+        matchId,
+        participantIds: [updated.userIdA, updated.userIdB],
+        lastMessageAt: Date.now(),
+      });
+      return { match: updated, chatId };
     }
 
-    return updated;
+    return { match: updated, chatId: null };
   },
 });
