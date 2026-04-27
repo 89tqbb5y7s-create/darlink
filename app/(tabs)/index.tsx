@@ -34,6 +34,7 @@ export default function HomeScreen() {
   const profile = useQuery(api.profile.getProfile, userId ? { userId } : 'skip');
   const dh = useQuery(api.profile.getDigitalHuman, userId ? { userId } : 'skip');
   const distill = useAction(api.nuwa.distillForUser);
+  const generateMatches = useAction(api.matchEngine.generateForUser);
   const [generating, setGenerating] = useState(false);
 
   if (!userId) return null;
@@ -41,7 +42,11 @@ export default function HomeScreen() {
   async function handleGenerate() {
     if (!userId) return;
     setGenerating(true);
-    try { await distill({ userId }); } catch (e) { console.error(e); }
+    try {
+      await distill({ userId });
+      // Fire match generation after digital human; don't block UI on result
+      generateMatches({ userId }).catch((e) => console.error('match gen:', e));
+    } catch (e) { console.error(e); }
     finally { setGenerating(false); }
   }
 

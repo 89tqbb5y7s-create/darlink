@@ -8,10 +8,13 @@
  * @module
  */
 
+import type * as activity from "../activity.js";
 import type * as ai from "../ai.js";
 import type * as auth from "../auth.js";
 import type * as chats from "../chats.js";
 import type * as lib_distill from "../lib/distill.js";
+import type * as matchEngine from "../matchEngine.js";
+import type * as matchEngineInternal from "../matchEngineInternal.js";
 import type * as matches from "../matches.js";
 import type * as nuwa from "../nuwa.js";
 import type * as profile from "../profile.js";
@@ -24,10 +27,13 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  activity: typeof activity;
   ai: typeof ai;
   auth: typeof auth;
   chats: typeof chats;
   "lib/distill": typeof lib_distill;
+  matchEngine: typeof matchEngine;
+  matchEngineInternal: typeof matchEngineInternal;
   matches: typeof matches;
   nuwa: typeof nuwa;
   profile: typeof profile;

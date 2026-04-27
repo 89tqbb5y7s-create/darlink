@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { useMutation } from 'convex/react';
+import { useAction, useMutation } from 'convex/react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -161,6 +161,7 @@ export default function QuestionnaireScreen() {
   const router = useRouter();
   const { auth } = useAuth();
   const upsertQuestionnaire = useMutation(api.profile.upsertQuestionnaire);
+  const generateMatches = useAction(api.matchEngine.generateForUser);
 
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
@@ -211,6 +212,8 @@ export default function QuestionnaireScreen() {
         raw: answers,
       });
       router.replace('/(tabs)');
+      // Fire match generation in background after navigating away
+      generateMatches({ userId: auth.userId }).catch((e) => console.error('match gen:', e));
     } catch (e) {
       console.error(e);
     } finally {
