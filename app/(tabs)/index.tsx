@@ -1,9 +1,9 @@
-import { useAction, useMutation, useQuery } from 'convex/react';
+import { useAction, useQuery } from 'convex/react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +14,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '../../convex/_generated/api';
 import { useAuth } from '@/src/lib/auth-context';
-import { Colors, Radii, Spacing } from '@/constants/theme';
+import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
+
+function Tag({ text, color }: { text: string; color: string }) {
+  return (
+    <View style={[styles.tag, { backgroundColor: color + '15', borderColor: color + '30' }]}>
+      <Text style={[styles.tagText, { color }]}>{text}</Text>
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,123 +31,143 @@ export default function HomeScreen() {
 
   const user = useQuery(api.auth.me, userId ? { userId } : 'skip');
   const profile = useQuery(api.profile.getProfile, userId ? { userId } : 'skip');
-  const digitalHuman = useQuery(api.profile.getDigitalHuman, userId ? { userId } : 'skip');
-
+  const dh = useQuery(api.profile.getDigitalHuman, userId ? { userId } : 'skip');
   const distill = useAction(api.nuwa.distillForUser);
   const [generating, setGenerating] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+
+  if (!userId) return null;
 
   async function handleGenerate() {
     if (!userId) return;
     setGenerating(true);
-    try {
-      await distill({ userId });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setGenerating(false);
-    }
+    try { await distill({ userId }); } catch (e) { console.error(e); }
+    finally { setGenerating(false); }
   }
 
-  if (!userId) return null;
-
   const hasProfile = !!profile;
-  const hasDH = !!digitalHuman;
+  const hasDH = !!dh;
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => setRefreshing(false)} />}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.greeting}>
-          <Text style={styles.greetingText}>
-            你好，{user?.nickname ?? '同学'} 👋
-          </Text>
-          <Text style={styles.schoolText}>{user?.school}</Text>
+      {/* Background orbs */}
+      <View style={styles.orb1} pointerEvents="none" />
+      <View style={styles.orb2} pointerEvents="none" />
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+
+        {/* Header greeting */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>你好，{user?.nickname ?? '同学'} 👋</Text>
+            <Text style={styles.school}>{user?.school}</Text>
+          </View>
+          {user?.verifiedStatus === 'verified' && (
+            <View style={styles.verifiedBadge}>
+              <Text style={styles.verifiedText}>✓ 已认证</Text>
+            </View>
+          )}
         </View>
 
-        {!hasProfile ? (
-          <View style={styles.ctaCard}>
-            <Text style={styles.ctaEmoji}>📝</Text>
-            <Text style={styles.ctaTitle}>完成画像问卷，解锁匹配</Text>
-            <Text style={styles.ctaDesc}>填写 10 道题，AI 帮你生成专属数字人名片，开始精准匹配</Text>
-            <TouchableOpacity
-              style={styles.ctaBtn}
-              onPress={() => router.push('/onboarding/questionnaire')}
+        {/* Step 1: No profile yet */}
+        {!hasProfile && (
+          <View style={styles.stepCard}>
+            <LinearGradient
+              colors={['#FDF2F8', '#EEF2FF']}
+              style={styles.stepGrad}
             >
-              <Text style={styles.ctaBtnText}>开始填写</Text>
-            </TouchableOpacity>
-          </View>
-        ) : !hasDH ? (
-          <View style={styles.ctaCard}>
-            <Text style={styles.ctaEmoji}>🤖</Text>
-            <Text style={styles.ctaTitle}>生成你的数字人名片</Text>
-            <Text style={styles.ctaDesc}>AI 正在蒸馏你的性格画像…</Text>
-            <TouchableOpacity
-              style={[styles.ctaBtn, generating && styles.ctaBtnDisabled]}
-              onPress={handleGenerate}
-              disabled={generating}
-            >
-              {generating ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.ctaBtnText}>立即生成</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.dhCard}>
-            <View style={styles.dhHeader}>
-              <Text style={styles.dhTitle}>我的数字人</Text>
-              <TouchableOpacity onPress={() => router.push('/onboarding/questionnaire')}>
-                <Text style={styles.dhEdit}>编辑</Text>
+              <Text style={styles.stepEmoji}>📝</Text>
+              <Text style={styles.stepTitle}>第一步：完成画像问卷</Text>
+              <Text style={styles.stepDesc}>5 分钟轻量问卷，AI 帮你生成专属数字人名片，才能开始精准匹配</Text>
+              <TouchableOpacity onPress={() => router.push('/onboarding/questionnaire')} style={styles.stepBtnWrap} activeOpacity={0.85}>
+                <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.stepBtn}>
+                  <Text style={styles.stepBtnText}>开始填写 ✦</Text>
+                </LinearGradient>
               </TouchableOpacity>
-            </View>
-            <View style={styles.cardTextBox}>
-              <Text style={styles.cardText}>{digitalHuman.cardText}</Text>
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>心智模型</Text>
-              {digitalHuman.mentalModels.map((m, i) => (
-                <View key={i} style={styles.tag}>
-                  <Text style={styles.tagText}>• {m}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>表达特征</Text>
-              {digitalHuman.expressionPatterns.map((e, i) => (
-                <View key={i} style={styles.tag}>
-                  <Text style={styles.tagText}>• {e}</Text>
-                </View>
-              ))}
-            </View>
-
-            <TouchableOpacity
-              style={[styles.regenBtn, generating && styles.ctaBtnDisabled]}
-              onPress={handleGenerate}
-              disabled={generating}
-            >
-              {generating ? (
-                <ActivityIndicator color={Colors.primary} size="small" />
-              ) : (
-                <Text style={styles.regenText}>重新生成</Text>
-              )}
-            </TouchableOpacity>
+            </LinearGradient>
           </View>
         )}
 
+        {/* Step 2: Profile done, no digital human yet */}
+        {hasProfile && !hasDH && (
+          <View style={styles.stepCard}>
+            <LinearGradient colors={['#FDF2F8', '#EEF2FF']} style={styles.stepGrad}>
+              <Text style={styles.stepEmoji}>🤖</Text>
+              <Text style={styles.stepTitle}>第二步：生成你的 AI 数字人</Text>
+              <Text style={styles.stepDesc}>AI 正在蒸馏你的性格画像，生成专属名片…</Text>
+              <TouchableOpacity onPress={handleGenerate} disabled={generating} style={styles.stepBtnWrap} activeOpacity={0.85}>
+                <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.stepBtn, generating && { opacity: 0.5 }]}>
+                  {generating ? <ActivityIndicator color="#fff" /> : <Text style={styles.stepBtnText}>立即生成 ✦</Text>}
+                </LinearGradient>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        )}
+
+        {/* Digital Human Card */}
         {hasDH && (
-          <TouchableOpacity
-            style={styles.matchCta}
-            onPress={() => router.push('/(tabs)/match')}
-          >
-            <Text style={styles.matchCtaText}>去看看谁和你匹配 ✨</Text>
-          </TouchableOpacity>
+          <>
+            <View style={styles.dhCard}>
+              <View style={styles.dhCardHeader}>
+                <View style={styles.dhAvatarWrap}>
+                  <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.dhAvatar}>
+                    <Text style={styles.dhAvatarText}>{user?.nickname?.[0] ?? '?'}</Text>
+                  </LinearGradient>
+                  <View style={styles.dhSparkle}>
+                    <Text style={{ fontSize: 10 }}>✦</Text>
+                  </View>
+                </View>
+                <View style={styles.dhMeta}>
+                  <Text style={styles.dhName}>{user?.nickname}</Text>
+                  <Text style={styles.dhSchool}>{user?.school}</Text>
+                </View>
+                <TouchableOpacity onPress={() => router.push('/onboarding/questionnaire')} style={styles.dhEditBtn}>
+                  <Text style={styles.dhEditText}>编辑</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.dhTextBox}>
+                <Text style={styles.dhCardText}>{dh.cardText}</Text>
+              </View>
+
+              <View style={styles.dhSection}>
+                <Text style={styles.dhSectionLabel}>心智模型</Text>
+                <View style={styles.tagRow}>
+                  {dh.mentalModels.map((m, i) => (
+                    <Tag key={i} text={m} color={Colors.study} />
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.dhSection}>
+                <Text style={styles.dhSectionLabel}>表达特征</Text>
+                <View style={styles.tagRow}>
+                  {dh.expressionPatterns.map((e, i) => (
+                    <Tag key={i} text={e} color={Colors.pinkDeep} />
+                  ))}
+                </View>
+              </View>
+
+              <TouchableOpacity onPress={handleGenerate} disabled={generating} style={styles.regenBtn}>
+                {generating
+                  ? <ActivityIndicator color={Colors.pinkDeep} size="small" />
+                  : <Text style={styles.regenText}>重新生成</Text>
+                }
+              </TouchableOpacity>
+            </View>
+
+            {/* Go Match CTA */}
+            <TouchableOpacity onPress={() => router.push('/(tabs)/match')} style={styles.matchCtaWrap} activeOpacity={0.85}>
+              <LinearGradient
+                colors={[Colors.gradientStart, Colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.matchCta}
+              >
+                <Text style={styles.matchCtaText}>去看看谁和你匹配</Text>
+                <Text style={styles.matchCtaIcon}>✨</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -148,73 +176,97 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
-  content: { padding: Spacing.lg, gap: Spacing.lg },
-  greeting: { gap: Spacing.xs },
-  greetingText: { fontSize: 24, fontWeight: '800', color: Colors.text },
-  schoolText: { fontSize: 14, color: Colors.textSecondary },
-  ctaCard: {
-    backgroundColor: Colors.card,
-    borderRadius: Radii.xl,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    gap: Spacing.sm,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+  orb1: {
+    position: 'absolute', top: -40, right: -40, width: 220, height: 220,
+    borderRadius: 110, backgroundColor: Colors.pink, opacity: 0.10,
   },
-  ctaEmoji: { fontSize: 48 },
-  ctaTitle: { fontSize: 18, fontWeight: '700', color: Colors.text, textAlign: 'center' },
-  ctaDesc: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  ctaBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radii.lg,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    marginTop: Spacing.sm,
+  orb2: {
+    position: 'absolute', bottom: 120, left: -60, width: 200, height: 200,
+    borderRadius: 100, backgroundColor: Colors.blue, opacity: 0.08,
   },
-  ctaBtnDisabled: { opacity: 0.5 },
-  ctaBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  content: { padding: Spacing.lg, gap: Spacing.lg, paddingBottom: Spacing.xxl },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  greeting: { fontSize: 26, fontWeight: '800', color: Colors.text },
+  school: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
+  verifiedBadge: {
+    backgroundColor: Colors.successBg,
+    borderRadius: Radii.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  verifiedText: { fontSize: 12, color: Colors.success, fontWeight: '600' },
+
+  stepCard: { borderRadius: Radii['3xl'], overflow: 'hidden', ...Shadows.md },
+  stepGrad: { padding: Spacing.xl, alignItems: 'center', gap: Spacing.md },
+  stepEmoji: { fontSize: 48 },
+  stepTitle: { fontSize: 18, fontWeight: '800', color: Colors.text, textAlign: 'center' },
+  stepDesc: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+  stepBtnWrap: { width: '100%' },
+  stepBtn: { borderRadius: Radii.full, padding: Spacing.md, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  stepBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+
   dhCard: {
-    backgroundColor: Colors.card,
-    borderRadius: Radii.xl,
+    backgroundColor: Colors.bgWhite,
+    borderRadius: Radii['3xl'],
     padding: Spacing.lg,
     gap: Spacing.md,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.md,
   },
-  dhHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  dhTitle: { fontSize: 18, fontWeight: '700', color: Colors.text },
-  dhEdit: { fontSize: 14, color: Colors.primary, fontWeight: '600' },
-  cardTextBox: {
-    backgroundColor: Colors.primary + '10',
-    borderRadius: Radii.md,
+  dhCardHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  dhAvatarWrap: { position: 'relative' },
+  dhAvatar: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  dhAvatarText: { fontSize: 22, fontWeight: '800', color: '#fff' },
+  dhSparkle: {
+    position: 'absolute', bottom: -2, right: -2,
+    width: 18, height: 18, borderRadius: 9,
+    backgroundColor: '#fff',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  dhMeta: { flex: 1 },
+  dhName: { fontSize: 17, fontWeight: '800', color: Colors.text },
+  dhSchool: { fontSize: 12, color: Colors.textSecondary },
+  dhEditBtn: {
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: Radii.full,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  dhEditText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '600' },
+  dhTextBox: {
+    backgroundColor: Colors.bg,
+    borderRadius: Radii.lg,
     padding: Spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: Colors.primary,
+    borderLeftColor: Colors.pink,
   },
-  cardText: { fontSize: 15, color: Colors.text, lineHeight: 22 },
-  section: { gap: Spacing.xs },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
-  tag: {},
-  tagText: { fontSize: 14, color: Colors.textSecondary, lineHeight: 20 },
+  dhCardText: { fontSize: 14, color: Colors.textBody, lineHeight: 22 },
+  dhSection: { gap: 6 },
+  dhSectionLabel: { fontSize: 11, fontWeight: '700', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8 },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radii.full, borderWidth: 1 },
+  tagText: { fontSize: 12, fontWeight: '600' },
   regenBtn: {
     borderWidth: 1.5,
-    borderColor: Colors.primary,
-    borderRadius: Radii.lg,
+    borderColor: Colors.border,
+    borderRadius: Radii.full,
     padding: Spacing.sm,
     alignItems: 'center',
   },
-  regenText: { fontSize: 14, color: Colors.primary, fontWeight: '600' },
+  regenText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '600' },
+  matchCtaWrap: { borderRadius: Radii.full, overflow: 'hidden' },
   matchCta: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radii.xl,
     padding: Spacing.lg,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: Radii.full,
+    ...Shadows.lg,
   },
-  matchCtaText: { fontSize: 16, color: '#fff', fontWeight: '700' },
+  matchCtaText: { fontSize: 16, color: '#fff', fontWeight: '800' },
+  matchCtaIcon: { fontSize: 18 },
 });

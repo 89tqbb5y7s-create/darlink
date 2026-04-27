@@ -1,4 +1,5 @@
 import { useMutation } from 'convex/react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -12,11 +13,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '../../convex/_generated/api';
-import { useAuth } from '@/src/lib/auth-context';
-import { Colors, Radii, Spacing } from '@/constants/theme';
 import type { Id } from '../../convex/_generated/dataModel';
+import { useAuth } from '@/src/lib/auth-context';
+import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
 
 const SCHOOLS = [
   'HKU', 'CUHK', 'HKUST', 'PolyU', 'CityU', 'HKBU', 'LU', 'EdUHK',
@@ -58,139 +60,239 @@ export default function SignInScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Text style={styles.logo}>滴搭</Text>
-          <Text style={styles.tagline}>找到你的同频搭子</Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      {/* Soft glow background orbs */}
+      <View style={styles.orb1} pointerEvents="none" />
+      <View style={styles.orb2} pointerEvents="none" />
 
-        <View style={styles.form}>
-          <Text style={styles.label}>学校邮箱</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="xxx@university.edu.hk"
-            placeholderTextColor={Colors.textMuted}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-          />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-          <Text style={styles.label}>昵称</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="让大家怎么称呼你？"
-            placeholderTextColor={Colors.textMuted}
-            value={nickname}
-            onChangeText={setNickname}
-            maxLength={20}
-          />
-
-          <Text style={styles.label}>学校</Text>
-          <TouchableOpacity
-            style={[styles.input, styles.select]}
-            onPress={() => setShowSchools(!showSchools)}
-          >
-            <Text style={school ? styles.selectText : styles.selectPlaceholder}>
-              {school || '选择你的学校'}
-            </Text>
-            <Text style={styles.chevron}>{showSchools ? '▲' : '▼'}</Text>
-          </TouchableOpacity>
-
-          {showSchools && (
-            <View style={styles.dropdown}>
-              {SCHOOLS.map((s) => (
-                <TouchableOpacity
-                  key={s}
-                  style={[styles.dropdownItem, school === s && styles.dropdownItemActive]}
-                  onPress={() => {
-                    setSchool(s);
-                    setShowSchools(false);
-                  }}
-                >
-                  <Text style={[styles.dropdownText, school === s && styles.dropdownTextActive]}>
-                    {s}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+          {/* Logo */}
+          <View style={styles.logoBlock}>
+            <View style={styles.logoMark}>
+              <View style={styles.logoCircleBlue} />
+              <View style={styles.logoCirclePink} />
+              <Text style={styles.logoStar}>✦</Text>
             </View>
-          )}
+            <Text style={styles.logoText}>
+              滴搭 <Text style={styles.logoAccent}>Darlink</Text>
+            </Text>
+            <Text style={styles.tagline}>让你的 AI 分身，帮你找到真正合拍的人</Text>
+          </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {/* Badge */}
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>🛡️ 仅限真实大学生认证用户</Text>
+          </View>
 
-          <TouchableOpacity
-            style={[styles.btn, loading && styles.btnDisabled]}
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.btnText}>开始匹配之旅</Text>
-            )}
-          </TouchableOpacity>
+          {/* Form Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>创建你的账户</Text>
 
-          <Text style={styles.hint}>
-            使用学校邮箱自动通过身份验证{'\n'}
-            非学校邮箱需等待人工审核
-          </Text>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <View style={styles.field}>
+              <Text style={styles.label}>学校邮箱</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="xxx@university.edu.hk"
+                placeholderTextColor={Colors.textPlaceholder}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoComplete="email"
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>昵称</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="让大家怎么称呼你？"
+                placeholderTextColor={Colors.textPlaceholder}
+                value={nickname}
+                onChangeText={setNickname}
+                maxLength={20}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>学校</Text>
+              <TouchableOpacity
+                style={[styles.input, styles.select]}
+                onPress={() => setShowSchools(!showSchools)}
+              >
+                <Text style={school ? styles.selectValue : styles.selectPlaceholder}>
+                  {school || '选择你的学校'}
+                </Text>
+                <Text style={styles.chevron}>{showSchools ? '▲' : '▼'}</Text>
+              </TouchableOpacity>
+              {showSchools && (
+                <View style={styles.dropdown}>
+                  <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
+                    {SCHOOLS.map((s) => (
+                      <TouchableOpacity
+                        key={s}
+                        style={[styles.dropdownItem, school === s && styles.dropdownItemActive]}
+                        onPress={() => { setSchool(s); setShowSchools(false); }}
+                      >
+                        <Text style={[styles.dropdownText, school === s && styles.dropdownTextActive]}>{s}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            {/* Gradient Button */}
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={loading}
+              style={styles.btnWrap}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={[Colors.gradientStart, Colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.btn, loading && styles.btnDisabled]}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Text style={styles.btnText}>生成我的 AI 分身</Text>
+                    <Text style={styles.btnIcon}>✦</Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <Text style={styles.hint}>
+              使用学校邮箱（.edu.hk / .edu.cn 等）自动通过认证
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
+const ORB_SIZE = 280;
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
-  inner: { flexGrow: 1, justifyContent: 'center', padding: Spacing.xl },
-  header: { alignItems: 'center', marginBottom: Spacing.xxl },
-  logo: { fontSize: 48, fontWeight: '800', color: Colors.primary, letterSpacing: -1 },
-  tagline: { fontSize: 16, color: Colors.textSecondary, marginTop: Spacing.xs },
-  form: { gap: Spacing.sm },
-  label: { fontSize: 14, fontWeight: '600', color: Colors.text, marginTop: Spacing.sm },
+  flex: { flex: 1 },
+  orb1: {
+    position: 'absolute',
+    top: -60,
+    left: -60,
+    width: ORB_SIZE,
+    height: ORB_SIZE,
+    borderRadius: ORB_SIZE / 2,
+    backgroundColor: Colors.pink,
+    opacity: 0.12,
+  },
+  orb2: {
+    position: 'absolute',
+    bottom: 80,
+    right: -80,
+    width: ORB_SIZE + 60,
+    height: ORB_SIZE + 60,
+    borderRadius: (ORB_SIZE + 60) / 2,
+    backgroundColor: Colors.blue,
+    opacity: 0.10,
+  },
+  inner: { flexGrow: 1, justifyContent: 'center', padding: Spacing.lg, gap: Spacing.lg },
+  logoBlock: { alignItems: 'center', gap: Spacing.sm },
+  logoMark: { width: 56, height: 56, justifyContent: 'center', alignItems: 'center' },
+  logoCircleBlue: {
+    position: 'absolute',
+    left: 4,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.blue,
+    opacity: 0.6,
+  },
+  logoCirclePink: {
+    position: 'absolute',
+    right: 4,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.pink,
+    opacity: 0.6,
+  },
+  logoStar: { position: 'absolute', fontSize: 14, color: '#fff', zIndex: 2, fontWeight: '700' },
+  logoText: { fontSize: 28, fontWeight: '800', color: Colors.text, letterSpacing: 0.5 },
+  logoAccent: { color: Colors.pinkDeep },
+  tagline: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
+  badge: {
+    alignSelf: 'center',
+    backgroundColor: Colors.bgWhite,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radii.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    ...Shadows.sm,
+  },
+  badgeText: { fontSize: 12, color: Colors.study, fontWeight: '600' },
+  card: {
+    backgroundColor: Colors.bgWhite,
+    borderRadius: Radii['3xl'],
+    padding: Spacing.lg,
+    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadows.md,
+  },
+  cardTitle: { fontSize: 20, fontWeight: '800', color: Colors.text, marginBottom: 4 },
+  field: { gap: 6 },
+  label: { fontSize: 13, fontWeight: '600', color: Colors.textBody },
   input: {
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.bg,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    borderRadius: Radii.md,
+    borderRadius: Radii.lg,
     padding: Spacing.md,
     fontSize: 15,
     color: Colors.text,
   },
   select: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  selectText: { fontSize: 15, color: Colors.text },
-  selectPlaceholder: { fontSize: 15, color: Colors.textMuted },
-  chevron: { fontSize: 12, color: Colors.textMuted },
+  selectValue: { fontSize: 15, color: Colors.text },
+  selectPlaceholder: { fontSize: 15, color: Colors.textPlaceholder },
+  chevron: { fontSize: 11, color: Colors.textMuted },
   dropdown: {
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.bgWhite,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    borderRadius: Radii.md,
-    overflow: 'hidden',
-    maxHeight: 200,
-  },
-  dropdownItem: {
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  dropdownItemActive: { backgroundColor: Colors.primaryLight + '20' },
-  dropdownText: { fontSize: 15, color: Colors.text },
-  dropdownTextActive: { color: Colors.primary, fontWeight: '600' },
-  error: { color: Colors.error, fontSize: 13, marginTop: Spacing.xs },
-  btn: {
-    backgroundColor: Colors.primary,
     borderRadius: Radii.lg,
-    padding: Spacing.md,
-    alignItems: 'center',
-    marginTop: Spacing.lg,
+    overflow: 'hidden',
+    ...Shadows.sm,
   },
-  btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  hint: { textAlign: 'center', color: Colors.textMuted, fontSize: 12, marginTop: Spacing.md, lineHeight: 18 },
+  dropdownItem: { padding: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  dropdownItemActive: { backgroundColor: Colors.studyBg },
+  dropdownText: { fontSize: 15, color: Colors.textBody },
+  dropdownTextActive: { color: Colors.study, fontWeight: '700' },
+  errorText: { fontSize: 13, color: Colors.error },
+  btnWrap: { marginTop: 4 },
+  btn: {
+    borderRadius: Radii.full,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  btnDisabled: { opacity: 0.5 },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  btnIcon: { color: '#fff', fontSize: 16 },
+  hint: { textAlign: 'center', color: Colors.textMuted, fontSize: 12, lineHeight: 18 },
 });

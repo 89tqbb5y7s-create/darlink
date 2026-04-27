@@ -286,7 +286,7 @@ export default function QuestionnaireScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   progressBar: { height: 4, backgroundColor: Colors.border, marginHorizontal: 0 },
-  progressFill: { height: 4, backgroundColor: Colors.primary, borderRadius: 2 },
+  progressFill: { height: 4, backgroundColor: Colors.pinkDeep, borderRadius: 2 },
   stepCount: {
     textAlign: 'right',
     fontSize: 13,
@@ -310,11 +310,11 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.bgWhite,
   },
-  optionSelected: { borderColor: Colors.primary, backgroundColor: Colors.primary + '15' },
+  optionSelected: { borderColor: Colors.pinkDeep, backgroundColor: Colors.pinkDeep + '15' },
   optionText: { fontSize: 14, color: Colors.textSecondary },
-  optionTextSelected: { color: Colors.primary, fontWeight: '600' },
+  optionTextSelected: { color: Colors.pinkDeep, fontWeight: '600' },
   footer: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     flex: 2,
     padding: Spacing.md,
     borderRadius: Radii.lg,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.pinkDeep,
     alignItems: 'center',
   },
   nextBtnDisabled: { opacity: 0.4 },
