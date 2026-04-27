@@ -2,12 +2,14 @@ import { useQuery } from 'convex/react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '../../convex/_generated/api';
 import { useAuth } from '@/src/lib/auth-context';
 import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
+import { PressableScale } from '@/src/components/PressableScale';
+import * as Haptics from 'expo-haptics';
 
 type Scene = 'study' | 'food' | 'romance';
 
@@ -42,17 +44,18 @@ export default function MatchScreen() {
         {SCENES.map((s) => {
           const active = scene === s.key;
           return (
-            <TouchableOpacity
+            <PressableScale
               key={s.key}
               style={[styles.sceneTab, active && { backgroundColor: s.bg, borderColor: s.border }]}
               onPress={() => setScene(s.key)}
-              activeOpacity={0.7}
+              haptic="selection"
+              scaleDown={0.95}
             >
               <Text style={styles.sceneEmoji}>{s.emoji}</Text>
               <Text style={[styles.sceneLabel, active && { color: s.color, fontWeight: '700' }]}>
                 {s.label}
               </Text>
-            </TouchableOpacity>
+            </PressableScale>
           );
         })}
       </View>
@@ -76,11 +79,12 @@ export default function MatchScreen() {
           const sc = currentScene;
           const score = item.match.fitScore;
           return (
-            <TouchableOpacity
+            <PressableScale
               key={item.match._id}
               style={styles.card}
               onPress={() => router.push(`/match/${item.match._id}`)}
-              activeOpacity={0.8}
+              haptic="light"
+              scaleDown={0.97}
             >
               {/* Top row */}
               <View style={styles.cardTop}>
@@ -132,7 +136,7 @@ export default function MatchScreen() {
                     : '查看详情 →'}
                 </Text>
               </View>
-            </TouchableOpacity>
+            </PressableScale>
           );
         })}
       </ScrollView>

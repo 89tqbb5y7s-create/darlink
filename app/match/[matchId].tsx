@@ -2,13 +2,15 @@ import { useMutation, useQuery } from 'convex/react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { useAuth } from '@/src/lib/auth-context';
 import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
+import { PressableScale } from '@/src/components/PressableScale';
+import * as Haptics from 'expo-haptics';
 
 const SCENE_MAP = {
   study: { label: '学习搭子', emoji: '📚', color: Colors.study, bg: Colors.studyBg, border: Colors.studyBorder },
@@ -145,22 +147,23 @@ export default function MatchDetailScreen() {
             </View>
             <Text style={styles.iceHint}>选一句发给对方（由你确认后才出现在聊天框）</Text>
             {match.icebreakers.map((ice, i) => (
-              <TouchableOpacity
+              <PressableScale
                 key={i}
                 style={[styles.iceOption, selectedIce === i && styles.iceOptionActive]}
                 onPress={() => setSelectedIce(selectedIce === i ? null : i)}
-                activeOpacity={0.7}
+                haptic="selection"
+                scaleDown={0.97}
               >
                 <Text style={[styles.iceText, selectedIce === i && { color: Colors.pinkDeep }]}>"{ice}"</Text>
                 {selectedIce === i && (
                   <View style={styles.iceSelectedRow}>
                     <Text style={styles.iceSelectedText}>✓ 已选，去聊天时使用</Text>
-                    <TouchableOpacity>
+                    <PressableScale haptic="light">
                       <Text style={styles.iceSwapText}>换一句</Text>
-                    </TouchableOpacity>
+                    </PressableScale>
                   </View>
                 )}
-              </TouchableOpacity>
+              </PressableScale>
             ))}
           </View>
         )}
@@ -169,10 +172,10 @@ export default function MatchDetailScreen() {
       {/* Footer */}
       {!isMutual && myStatus === 'new' && (
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.passBtn} onPress={() => handleDecision('passed')} disabled={responding}>
+          <PressableScale style={styles.passBtn} onPress={() => handleDecision('passed')} disabled={responding} haptic="medium">
             <Text style={styles.passBtnText}>跳过</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleDecision('interested')} disabled={responding || responding} style={styles.interestedBtnWrap} activeOpacity={0.85}>
+          </PressableScale>
+          <PressableScale onPress={() => handleDecision('interested')} disabled={responding} style={styles.interestedBtnWrap} haptic="heavy" scaleDown={0.97}>
             <LinearGradient
               colors={[Colors.gradientStart, Colors.gradientEnd]}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
@@ -180,17 +183,17 @@ export default function MatchDetailScreen() {
             >
               {responding ? <ActivityIndicator color="#fff" /> : <Text style={styles.interestedBtnText}>心动 ✨</Text>}
             </LinearGradient>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       )}
 
       {isMutual && (
         <View style={styles.footer}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/chat')} style={styles.chatBtnWrap} activeOpacity={0.85}>
+          <PressableScale onPress={() => router.push('/(tabs)/chat')} style={styles.chatBtnWrap} haptic="light">
             <LinearGradient colors={[Colors.success, '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.interestedBtn}>
               <Text style={styles.interestedBtnText}>🎉 去聊天</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       )}
 

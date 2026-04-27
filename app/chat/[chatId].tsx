@@ -10,7 +10,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +18,8 @@ import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { useAuth } from '@/src/lib/auth-context';
 import { Colors, Radii, Spacing } from '@/constants/theme';
+import { PressableScale } from '@/src/components/PressableScale';
+import * as Haptics from 'expo-haptics';
 
 function timeStr(ts: number) {
   return new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
@@ -115,16 +116,17 @@ export default function ChatRoomScreen() {
             multiline
             maxLength={500}
           />
-          <TouchableOpacity
+          <PressableScale
             style={styles.aiBtn}
             onPress={() => {}}
+            haptic="light"
           >
             <Text style={styles.aiBtnText}>✦</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </PressableScale>
+          <PressableScale
             onPress={handleSend}
             disabled={!text.trim() || sending}
-            activeOpacity={0.85}
+            haptic="light"
           >
             <LinearGradient
               colors={text.trim() ? [Colors.gradientStart, Colors.gradientEnd] : [Colors.border, Colors.border]}
@@ -136,7 +138,7 @@ export default function ChatRoomScreen() {
                 : <Text style={styles.sendIcon}>↑</Text>
               }
             </LinearGradient>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

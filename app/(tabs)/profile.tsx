@@ -2,12 +2,14 @@ import { useQuery } from 'convex/react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '../../convex/_generated/api';
 import { useAuth } from '@/src/lib/auth-context';
 import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
+import { PressableScale } from '@/src/components/PressableScale';
+import * as Haptics from 'expo-haptics';
 
 function InfoRow({ label, value }: { label: string; value?: string }) {
   return (
@@ -68,9 +70,9 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>我的画像</Text>
-              <TouchableOpacity onPress={() => router.push('/onboarding/questionnaire')} style={styles.editBtn}>
+              <PressableScale onPress={() => router.push('/onboarding/questionnaire')} style={styles.editBtn} haptic="light">
                 <Text style={styles.editBtnText}>重新填写</Text>
-              </TouchableOpacity>
+              </PressableScale>
             </View>
             <InfoRow label="社交能量" value={energyMap[profile.socialEnergy]} />
             <InfoRow label="聊天风格" value={styleMap[profile.communicationStyle]} />
@@ -79,10 +81,10 @@ export default function ProfileScreen() {
             <InfoRow label="目标" value={profile.socialGoal.join(' · ')} />
           </View>
         ) : (
-          <TouchableOpacity onPress={() => router.push('/onboarding/questionnaire')} style={styles.ctaCard} activeOpacity={0.85}>
+          <PressableScale onPress={() => router.push('/onboarding/questionnaire')} style={styles.ctaCard} haptic="medium">
             <Text style={styles.ctaEmoji}>📝</Text>
             <Text style={styles.ctaText}>填写画像问卷，开始匹配</Text>
-          </TouchableOpacity>
+          </PressableScale>
         )}
 
         {/* Account info */}
@@ -93,9 +95,9 @@ export default function ProfileScreen() {
           <InfoRow label="年级" value={user?.grade} />
         </View>
 
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
+        <PressableScale style={styles.signOutBtn} onPress={handleSignOut} haptic="medium">
           <Text style={styles.signOutText}>退出登录</Text>
-        </TouchableOpacity>
+        </PressableScale>
       </ScrollView>
     </SafeAreaView>
   );

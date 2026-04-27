@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../convex/_generated/api';
 import { useAuth } from '@/src/lib/auth-context';
 import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
+import { PressableScale } from '@/src/components/PressableScale';
+import * as Haptics from 'expo-haptics';
 
 function Tag({ text, color }: { text: string; color: string }) {
   return (
@@ -78,11 +79,11 @@ export default function HomeScreen() {
               <Text style={styles.stepEmoji}>📝</Text>
               <Text style={styles.stepTitle}>第一步：完成画像问卷</Text>
               <Text style={styles.stepDesc}>5 分钟轻量问卷，AI 帮你生成专属数字人名片，才能开始精准匹配</Text>
-              <TouchableOpacity onPress={() => router.push('/onboarding/questionnaire')} style={styles.stepBtnWrap} activeOpacity={0.85}>
+              <PressableScale onPress={() => router.push('/onboarding/questionnaire')} style={styles.stepBtnWrap} haptic="medium" scaleDown={0.97}>
                 <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.stepBtn}>
                   <Text style={styles.stepBtnText}>开始填写 ✦</Text>
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableScale>
             </LinearGradient>
           </View>
         )}
@@ -94,11 +95,11 @@ export default function HomeScreen() {
               <Text style={styles.stepEmoji}>🤖</Text>
               <Text style={styles.stepTitle}>第二步：生成你的 AI 数字人</Text>
               <Text style={styles.stepDesc}>AI 正在蒸馏你的性格画像，生成专属名片…</Text>
-              <TouchableOpacity onPress={handleGenerate} disabled={generating} style={styles.stepBtnWrap} activeOpacity={0.85}>
+              <PressableScale onPress={handleGenerate} disabled={generating} style={styles.stepBtnWrap} haptic="medium" scaleDown={0.97}>
                 <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.stepBtn, generating && { opacity: 0.5 }]}>
                   {generating ? <ActivityIndicator color="#fff" /> : <Text style={styles.stepBtnText}>立即生成 ✦</Text>}
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableScale>
             </LinearGradient>
           </View>
         )}
@@ -120,9 +121,9 @@ export default function HomeScreen() {
                   <Text style={styles.dhName}>{user?.nickname}</Text>
                   <Text style={styles.dhSchool}>{user?.school}</Text>
                 </View>
-                <TouchableOpacity onPress={() => router.push('/onboarding/questionnaire')} style={styles.dhEditBtn}>
+                <PressableScale onPress={() => router.push('/onboarding/questionnaire')} style={styles.dhEditBtn} haptic="light">
                   <Text style={styles.dhEditText}>编辑</Text>
-                </TouchableOpacity>
+                </PressableScale>
               </View>
 
               <View style={styles.dhTextBox}>
@@ -147,16 +148,16 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <TouchableOpacity onPress={handleGenerate} disabled={generating} style={styles.regenBtn}>
+              <PressableScale onPress={handleGenerate} disabled={generating} style={styles.regenBtn} haptic="light">
                 {generating
                   ? <ActivityIndicator color={Colors.pinkDeep} size="small" />
                   : <Text style={styles.regenText}>重新生成</Text>
                 }
-              </TouchableOpacity>
+              </PressableScale>
             </View>
 
             {/* Go Match CTA */}
-            <TouchableOpacity onPress={() => router.push('/(tabs)/match')} style={styles.matchCtaWrap} activeOpacity={0.85}>
+            <PressableScale onPress={() => router.push('/(tabs)/match')} style={styles.matchCtaWrap} haptic="heavy" scaleDown={0.97}>
               <LinearGradient
                 colors={[Colors.gradientStart, Colors.gradientEnd]}
                 start={{ x: 0, y: 0 }}
@@ -166,7 +167,7 @@ export default function HomeScreen() {
                 <Text style={styles.matchCtaText}>去看看谁和你匹配</Text>
                 <Text style={styles.matchCtaIcon}>✨</Text>
               </LinearGradient>
-            </TouchableOpacity>
+            </PressableScale>
           </>
         )}
       </ScrollView>

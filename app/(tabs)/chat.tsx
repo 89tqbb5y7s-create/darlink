@@ -1,12 +1,14 @@
 import { useQuery } from 'convex/react';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '../../convex/_generated/api';
 import { useAuth } from '@/src/lib/auth-context';
 import { Colors, Radii, Spacing } from '@/constants/theme';
+import { PressableScale } from '@/src/components/PressableScale';
+import * as Haptics from 'expo-haptics';
 
 function timeAgo(ts: number) {
   const diff = Date.now() - ts;
@@ -39,11 +41,12 @@ export default function ChatScreen() {
           </View>
         )}
         {chats?.map((item) => (
-          <TouchableOpacity
+          <PressableScale
             key={item.chat._id}
             style={styles.row}
             onPress={() => router.push(`/chat/${item.chat._id}`)}
-            activeOpacity={0.7}
+            haptic="light"
+            scaleDown={0.98}
           >
             <View style={styles.avatarWrap}>
               <Text style={styles.avatarText}>{item.other?.nickname?.[0] ?? '?'}</Text>
@@ -59,7 +62,7 @@ export default function ChatScreen() {
                 {item.lastMessage?.body ?? '还没有消息，说个你好吧 👋'}
               </Text>
             </View>
-          </TouchableOpacity>
+          </PressableScale>
         ))}
       </ScrollView>
     </SafeAreaView>

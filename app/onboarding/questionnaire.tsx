@@ -1,18 +1,14 @@
+import * as Haptics from 'expo-haptics';
 import { useMutation } from 'convex/react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '../../convex/_generated/api';
 import { useAuth } from '@/src/lib/auth-context';
+import { PressableScale } from '@/src/components/PressableScale';
 import { Colors, Radii, Spacing } from '@/constants/theme';
 
 type Step = {
@@ -244,16 +240,20 @@ export default function QuestionnaireScreen() {
           {current.options.map((opt) => {
             const isSelected = selected.includes(opt.value);
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={opt.value}
                 style={[styles.option, isSelected && styles.optionSelected]}
-                onPress={() => toggle(opt.value)}
-                activeOpacity={0.7}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  toggle(opt.value);
+                }}
+                haptic="none"
+                scaleDown={0.93}
               >
                 <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
                   {opt.label}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </View>
@@ -261,23 +261,31 @@ export default function QuestionnaireScreen() {
 
       <View style={styles.footer}>
         {step > 0 && (
-          <TouchableOpacity style={styles.backBtn} onPress={() => setStep(step - 1)}>
+          <PressableScale style={styles.backBtn} onPress={() => setStep(step - 1)} haptic="light">
             <Text style={styles.backText}>上一题</Text>
-          </TouchableOpacity>
+          </PressableScale>
         )}
-        <TouchableOpacity
-          style={[styles.nextBtn, (!canNext() || submitting) && styles.nextBtnDisabled]}
+        <PressableScale
+          style={styles.nextBtnWrap}
           onPress={handleNext}
           disabled={!canNext() || submitting}
+          haptic="medium"
+          scaleDown={0.97}
         >
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.nextText}>
-              {step < STEPS.length - 1 ? '下一题' : '生成我的数字人'}
-            </Text>
-          )}
-        </TouchableOpacity>
+          <LinearGradient
+            colors={canNext() && !submitting ? [Colors.gradientStart, Colors.gradientEnd] : [Colors.border, Colors.border]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={styles.nextBtn}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={[styles.nextText, !canNext() && { color: Colors.textMuted }]}>
+                {step < STEPS.length - 1 ? '下一题' : '生成我的数字人 ✦'}
+              </Text>
+            )}
+          </LinearGradient>
+        </PressableScale>
       </View>
     </SafeAreaView>
   );
@@ -326,19 +334,13 @@ const styles = StyleSheet.create({
   backBtn: {
     flex: 1,
     padding: Spacing.md,
-    borderRadius: Radii.lg,
+    borderRadius: Radii.full,
     borderWidth: 1.5,
     borderColor: Colors.border,
     alignItems: 'center',
   },
   backText: { fontSize: 15, color: Colors.textSecondary, fontWeight: '600' },
-  nextBtn: {
-    flex: 2,
-    padding: Spacing.md,
-    borderRadius: Radii.lg,
-    backgroundColor: Colors.pinkDeep,
-    alignItems: 'center',
-  },
-  nextBtnDisabled: { opacity: 0.4 },
+  nextBtnWrap: { flex: 2 },
+  nextBtn: { borderRadius: Radii.full, padding: Spacing.md, alignItems: 'center' },
   nextText: { fontSize: 15, color: '#fff', fontWeight: '700' },
 });
