@@ -51,7 +51,11 @@ export const getDetail = query({
     if (!match) return null;
     const a = await ctx.db.get(match.userIdA);
     const b = await ctx.db.get(match.userIdB);
-    return { match, userA: a, userB: b };
+    const chat = await ctx.db
+      .query("chats")
+      .withIndex("by_match", (q) => q.eq("matchId", matchId))
+      .unique();
+    return { match, userA: a, userB: b, chatId: chat?._id ?? null };
   },
 });
 

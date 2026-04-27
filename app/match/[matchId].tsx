@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from 'convex/react';
+import { useAction, useMutation, useQuery } from 'convex/react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -26,8 +26,11 @@ export default function MatchDetailScreen() {
 
   const detail = useQuery(api.matches.getDetail, matchId ? { matchId: matchId as Id<'matches'> } : 'skip');
   const respond = useMutation(api.matches.respond);
+  const suggestIcebreaker = useAction(api.ai.suggestIcebreaker);
   const [responding, setResponding] = useState(false);
   const [selectedIce, setSelectedIce] = useState<number | null>(null);
+  const [extraIce, setExtraIce] = useState<string[]>([]);
+  const [swapping, setSwapping] = useState(false);
 
   if (!userId || !detail) {
     return (
@@ -37,7 +40,7 @@ export default function MatchDetailScreen() {
     );
   }
 
-  const { match, userA, userB } = detail;
+  const { match, userA, userB, chatId: existingChatId } = detail;
   const isA = match.userIdA === userId;
   const myStatus = isA ? match.aStatus : match.bStatus;
   const otherUser = isA ? userB : userA;
@@ -54,8 +57,12 @@ export default function MatchDetailScreen() {
         decision,
       }) as { match: unknown; chatId: string | null };
       if (decision === 'interested' && result.chatId) {
+        const allIce = [...match.icebreakers, ...extraIce];
+        const iceParam = selectedIce !== null && allIce[selectedIce]
+          ? `?ice=${encodeURIComponent(allIce[selectedIce])}`
+          : '';
         Alert.alert('🎉 双向心动！', '你们已经互相心动，现在可以开始聊天了', [
-          { text: '去聊天', onPress: () => router.replace(`/chat/${result.chatId}`) },
+          { text: '去聊天', onPress: () => router.replace(`/chat/${result.chatId}${iceParam}`) },
         ]);
       }
     } catch (e) { console.error(e); }
@@ -137,7 +144,7 @@ export default function MatchDetailScreen() {
         </View>
 
         {/* Icebreakers */}
-        {match.icebreakers.length > 0 && (
+        {(match.icebreakers.length > 0 || extraIce.length > 0) && (
           <View style={styles.iceCard}>
             <View style={styles.iceHeader}>
               <Text style={styles.cardTitle}>AI 破冰建议</Text>
@@ -146,7 +153,7 @@ export default function MatchDetailScreen() {
               </View>
             </View>
             <Text style={styles.iceHint}>选一句发给对方（由你确认后才出现在聊天框）</Text>
-            {match.icebreakers.map((ice, i) => (
+            {[...match.icebreakers, ...extraIce].map((ice, i) => (
               <PressableScale
                 key={i}
                 style={[styles.iceOption, selectedIce === i && styles.iceOptionActive]}
@@ -158,8 +165,25 @@ export default function MatchDetailScreen() {
                 {selectedIce === i && (
                   <View style={styles.iceSelectedRow}>
                     <Text style={styles.iceSelectedText}>✓ 已选，去聊天时使用</Text>
-                    <PressableScale haptic="light">
-                      <Text style={styles.iceSwapText}>换一句</Text>
+                    <PressableScale
+                      haptic="light"
+                      disabled={swapping}
+                      onPress={async () => {
+                        if (!matchId || swapping) return;
+                        setSwapping(true);
+                        try {
+                          const newIce = await suggestIcebreaker({ matchId: matchId as Id<'matches'> });
+                          const newIndex = match.icebreakers.length + extraIce.length;
+                          setExtraIce((prev) => [...prev, newIce]);
+                          setSelectedIce(newIndex);
+                        } catch (e) { console.error(e); }
+                        finally { setSwapping(false); }
+                      }}
+                    >
+                      {swapping
+                        ? <ActivityIndicator size="small" color={Colors.pinkDeep} />
+                        : <Text style={styles.iceSwapText}>换一句</Text>
+                      }
                     </PressableScale>
                   </View>
                 )}
@@ -189,7 +213,21 @@ export default function MatchDetailScreen() {
 
       {isMutual && (
         <View style={styles.footer}>
-          <PressableScale onPress={() => router.push('/(tabs)/chat')} style={styles.chatBtnWrap} haptic="light">
+          <PressableScale
+            onPress={() => {
+              if (existingChatId) {
+                const allIce = [...match.icebreakers, ...extraIce];
+                const iceParam = selectedIce !== null && allIce[selectedIce]
+                  ? `?ice=${encodeURIComponent(allIce[selectedIce])}`
+                  : '';
+                router.push(`/chat/${existingChatId}${iceParam}`);
+              } else {
+                router.push('/(tabs)/chat');
+              }
+            }}
+            style={styles.chatBtnWrap}
+            haptic="light"
+          >
             <LinearGradient colors={[Colors.success, '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.interestedBtn}>
               <Text style={styles.interestedBtnText}>🎉 去聊天</Text>
             </LinearGradient>

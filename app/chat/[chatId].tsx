@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from 'convex/react';
+import { useAction, useMutation, useQuery } from 'convex/react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -26,17 +26,21 @@ function timeStr(ts: number) {
 }
 
 export default function ChatRoomScreen() {
-  const { chatId } = useLocalSearchParams<{ chatId: string }>();
+  const { chatId, ice } = useLocalSearchParams<{ chatId: string; ice?: string }>();
   const { auth } = useAuth();
   const userId = auth.status === 'authenticated' ? auth.userId : undefined;
 
   const messages = useQuery(api.chats.messages, chatId ? { chatId: chatId as Id<'chats'> } : 'skip');
   const sendMessage = useMutation(api.chats.sendMessage);
+  const suggestMessage = useAction(api.ai.suggestChatMessage);
 
-  const [text, setText] = useState('');
+  const [text, setText] = useState(ice ? decodeURIComponent(ice) : '');
   const [sending, setSending] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
+  const [aiAssisted, setAiAssisted] = useState(!!ice);
   const [error, setError] = useState('');
   const listRef = useRef<FlatList>(null);
+  const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (messages?.length) setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
@@ -47,11 +51,25 @@ export default function ChatRoomScreen() {
     setError('');
     setSending(true);
     try {
-      await sendMessage({ chatId: chatId as Id<'chats'>, senderId: userId, body: text.trim(), aiAssisted: false });
+      await sendMessage({ chatId: chatId as Id<'chats'>, senderId: userId, body: text.trim(), aiAssisted });
       setText('');
+      setAiAssisted(false);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : '发送失败');
     } finally { setSending(false); }
+  }
+
+  async function handleAiSuggest() {
+    if (!chatId || !userId || suggesting) return;
+    setSuggesting(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      const suggestion = await suggestMessage({ chatId: chatId as Id<'chats'>, senderId: userId });
+      setText(suggestion);
+      setAiAssisted(true);
+      inputRef.current?.focus();
+    } catch (e) { console.error(e); }
+    finally { setSuggesting(false); }
   }
 
   if (!userId) return null;
@@ -108,20 +126,25 @@ export default function ChatRoomScreen() {
 
         <View style={styles.inputRow}>
           <TextInput
-            style={styles.input}
+            ref={inputRef}
+            style={[styles.input, aiAssisted && styles.inputAi]}
             value={text}
-            onChangeText={setText}
+            onChangeText={(t) => { setText(t); if (aiAssisted && t !== text) setAiAssisted(false); }}
             placeholder="自己输入内容…"
             placeholderTextColor={Colors.textPlaceholder}
             multiline
             maxLength={500}
           />
           <PressableScale
-            style={styles.aiBtn}
-            onPress={() => {}}
-            haptic="light"
+            style={[styles.aiBtn, suggesting && { opacity: 0.6 }]}
+            onPress={handleAiSuggest}
+            disabled={suggesting}
+            haptic="medium"
           >
-            <Text style={styles.aiBtnText}>✦</Text>
+            {suggesting
+              ? <ActivityIndicator size="small" color={Colors.romance} />
+              : <Text style={styles.aiBtnText}>✦</Text>
+            }
           </PressableScale>
           <PressableScale
             onPress={handleSend}
@@ -188,6 +211,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.text,
     maxHeight: 100,
+  },
+  inputAi: {
+    borderColor: Colors.romanceBorder,
+    backgroundColor: Colors.romanceBg,
   },
   aiBtn: {
     width: 38,
