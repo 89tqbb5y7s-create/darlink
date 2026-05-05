@@ -60,6 +60,7 @@ export const updateBasic = mutation({
     major: v.optional(v.string()),
     grade: v.optional(v.string()),
     selfPersonality: v.optional(v.string()),
+    aiTwinDisabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { userId, ...patch } = args;
