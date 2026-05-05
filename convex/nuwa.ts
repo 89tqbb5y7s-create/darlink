@@ -123,7 +123,7 @@ const PIXEL_ENUM_HINT = `
 - 关键词 "卷王" → top=shirt, prop=laptop
 - 关键词 "搞笑" → face=wink
 
-若问卷信息不足，按 default 兜底（hair=short, face=chill, top=tee, prop=null, bg=null, palette=cream）。
+若问卷信息不足，按 default 兜底（hair=short, face=chill, top=tee, prop=null, bg=null, palette=pastel）。
 `.trim();
 
 const DEFAULT_PIXEL = {
@@ -135,6 +135,28 @@ const DEFAULT_PIXEL = {
   bg: null as string | null,
   palette: "pastel",
 };
+
+const HAIR_ENUM = ['short', 'long', 'curly', 'bald', 'bun', 'buzz', 'samurai', 'wave'];
+const FACE_ENUM = ['chill', 'serious', 'smile', 'glasses', 'wink'];
+const TOP_ENUM = ['hoodie', 'shirt', 'blazer', 'tee', 'jacket', 'turtleneck', 'jersey', 'dress', 'uniform', 'varsity'];
+const PROP_ENUM = ['book', 'laptop', 'coffee', 'mic', 'basketball', 'rocket', 'iphone', 'flask', 'typewriter', 'guitar'];
+const BG_ENUM = ['library', 'cafe', 'dorm', 'street', 'studio'];
+const BODY_ENUM = ['male', 'female', 'neutral'];
+const PALETTE_ENUM = ['warm', 'cool', 'pastel', 'mono', 'earth', 'candy', 'forest', 'sunset'];
+
+function validatePixelFeatures(raw: unknown): Record<string, unknown> {
+  if (!raw || typeof raw !== 'object') return { ...DEFAULT_PIXEL };
+  const r = raw as Record<string, unknown>;
+  return {
+    body: BODY_ENUM.includes(r.body as string) ? r.body : DEFAULT_PIXEL.body,
+    hair: HAIR_ENUM.includes(r.hair as string) ? r.hair : DEFAULT_PIXEL.hair,
+    face: FACE_ENUM.includes(r.face as string) ? r.face : DEFAULT_PIXEL.face,
+    top: TOP_ENUM.includes(r.top as string) ? r.top : DEFAULT_PIXEL.top,
+    prop: r.prop === null || PROP_ENUM.includes(r.prop as string) ? r.prop : DEFAULT_PIXEL.prop,
+    bg: r.bg === null || BG_ENUM.includes(r.bg as string) ? r.bg : DEFAULT_PIXEL.bg,
+    palette: PALETTE_ENUM.includes(r.palette as string) ? r.palette : DEFAULT_PIXEL.palette,
+  };
+}
 
 export const distillForUserByMode = action({
   args: {
@@ -287,9 +309,7 @@ ${JSON.stringify({ background: q.background, needs: q.needs, matching: q.matchin
     decisionHeuristics: parsed.decisionHeuristics?.length ? parsed.decisionHeuristics : [],
     expressionPatterns: parsed.expressionPatterns?.length ? parsed.expressionPatterns : [],
     systemPrompt: parsed.systemPrompt || parsed.cardText || `${mode} 模式 system prompt`,
-    pixelFeatures: parsed.pixelFeatures && typeof parsed.pixelFeatures === "object"
-      ? parsed.pixelFeatures
-      : { ...DEFAULT_PIXEL },
+    pixelFeatures: validatePixelFeatures(parsed.pixelFeatures),
     darwinScore: 0,
     darwinIterations: 0,
   };
