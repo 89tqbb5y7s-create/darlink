@@ -271,3 +271,10 @@ export const getModeStatus = query({
     return status;
   },
 });
+
+export const updateDarwinProgress = internalMutation({
+  args: { id: v.id("digitalHumans"), iteration: v.number() },
+  handler: async (ctx, { id, iteration }) => {
+    await ctx.db.patch(id, { darwinIterations: iteration });
+  },
+});

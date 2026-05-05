@@ -4,6 +4,8 @@ import { action } from "./_generated/server";
 import { api } from "./_generated/api";
 import { v } from "convex/values";
 import { distillDeterministic, DISTILL_LLM_PROMPT, type Profile } from "./lib/distill";
+import { runDarwinChain, type V2Distilled } from "./lib/darwin";
+import type { Id } from "./_generated/dataModel";
 
 export const distillForUser = action({
   args: { userId: v.id("users") },
@@ -181,67 +183,95 @@ export const distillForUserByMode = action({
     if (!q) throw new Error(`mode=${mode} 的画像问卷尚未提交`);
 
     const apiKey = process.env.OPENAI_API_KEY;
-    let result: V2Distilled;
-    let llmMode: "llm" | "deterministic" = "deterministic";
+    let v0: V2Distilled;
+    let llmMode: 'llm' | 'deterministic' = 'deterministic';
 
     if (apiKey) {
       try {
         const llm = await callOpenAIv2(apiKey, mode, q);
         if (llm) {
-          result = llm;
-          llmMode = "llm";
+          v0 = llm;
+          llmMode = 'llm';
         } else {
-          result = deterministicV2(mode, q);
+          v0 = deterministicV2(mode, q);
         }
       } catch (err) {
-        console.error("[nuwa.v2] LLM failed, falling back to deterministic:", err);
-        result = deterministicV2(mode, q);
+        console.error('[nuwa.v2] LLM v0 failed, falling back to deterministic:', err);
+        v0 = deterministicV2(mode, q);
       }
     } else {
-      result = deterministicV2(mode, q);
+      v0 = deterministicV2(mode, q);
     }
 
+    // Persist v0 first so we have an _id for darwin progress writes
     // (internal as any): same codegen lag reason as above
     const existing = await ctx.runQuery(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (internal as any).profile.getDigitalHumanByMode,
       { userId, mode },
     );
+
+    let dhId: Id<'digitalHumans'>;
     if (existing) {
       await ctx.runMutation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (internal as any).profile.replaceDigitalHuman,
-        { id: existing._id, data: result },
+        { id: existing._id, data: v0 },
       );
+      dhId = existing._id;
     } else {
-      await ctx.runMutation(
+      dhId = (await ctx.runMutation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (internal as any).profile.insertDigitalHuman,
         {
           userId,
           mode,
-          ...result,
-          // these match the v2 fields list of insertDigitalHuman:
+          ...v0,
           darwinScore: 0,
           darwinIterations: 0,
         },
-      );
+      )) as Id<'digitalHumans'>;
     }
 
-    return { status: "saved", mode: llmMode };
+    // Optionally run darwin chain
+    const darwinModes = (process.env.DARWIN_MODES ?? 'friend').split(',').map((m) => m.trim());
+    const shouldRunDarwin = apiKey && llmMode === 'llm' && darwinModes.includes(mode);
+
+    if (shouldRunDarwin && apiKey) {
+      try {
+        const winner = await runDarwinChain({
+          apiKey,
+          v0,
+          mode,
+          questionnaire: { background: q.background, needs: q.needs, matching: q.matching },
+          onProgress: async (iteration: number) => {
+            await ctx.runMutation(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (internal as any).profile.updateDarwinProgress,
+              { id: dhId, iteration },
+            );
+          },
+        });
+        // Replace stored v0 with darwin winner
+        await ctx.runMutation(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (internal as any).profile.replaceDigitalHuman,
+          { id: dhId, data: winner },
+        );
+      } catch (err) {
+        console.error('[darwin] chain failed, keeping v0:', err);
+        // Mark progress as 1 to signal "we tried but stopped"
+        await ctx.runMutation(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (internal as any).profile.updateDarwinProgress,
+          { id: dhId, iteration: 1 },
+        );
+      }
+    }
+
+    return { status: 'saved', mode: llmMode };
   },
 });
-
-type V2Distilled = {
-  cardText: string;
-  mentalModels: string[];
-  decisionHeuristics: string[];
-  expressionPatterns: string[];
-  systemPrompt: string;
-  pixelFeatures: Record<string, unknown>;
-  darwinScore: number;
-  darwinIterations: number;
-};
 
 function deterministicV2(
   mode: "study" | "friend" | "romance",
