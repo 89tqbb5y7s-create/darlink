@@ -9,7 +9,15 @@ if (!url) {
 const client = new ConvexHttpClient(url);
 
 async function main() {
-  const result = await client.mutation(internal.lib.migrate_v2.migrateAllToV2, {});
+  // Cast through any: convex codegen has not yet regenerated api.d.ts
+  // for the new `lib/migrate_v2.ts` module in the worktree. Once `npx
+  // convex dev` runs from main, _generated/api.d.ts gains lib.migrate_v2
+  // and this cast becomes unnecessary.
+  const fn = (internal as any).lib.migrate_v2.migrateAllToV2;
+  const result: {
+    qInserted: number; qSkipped: number; qTotalSource: number;
+    dhPatched: number; dhSkipped: number; dhTotal: number;
+  } = await client.mutation(fn, {});
   console.log('migration result:', result);
   const ok =
     result.qInserted + result.qSkipped === result.qTotalSource &&
