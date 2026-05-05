@@ -14,6 +14,7 @@ import { useAuth } from '@/src/lib/auth-context';
 import { Colors, Stickers, Shadows, Radii, Spacing } from '@/constants/theme';
 import { PressableScale } from '@/src/components/PressableScale';
 import { DoodleIcon, StickerCard, HandwrittenTitle } from '@/src/components/sticker';
+import { PixelAvatar, isValidPixelFeatures, DEFAULT_FEATURES } from '@/src/components/pixel';
 
 function Tag({ text, color }: { text: string; color: string }) {
   return (
@@ -144,8 +145,11 @@ function DigitalHumanCard({
   return (
     <View style={styles.dhCard}>
       <View style={styles.dhCardHeader}>
-        <View style={[styles.dhAvatar, { backgroundColor: Stickers[meta.palette].accent }]}>
-          <Text style={styles.dhAvatarText}>{userNickname[0] ?? '?'}</Text>
+        <View style={styles.dhAvatarWrap}>
+          <PixelAvatar
+            features={isValidPixelFeatures(dh.pixelFeatures) ? dh.pixelFeatures : DEFAULT_FEATURES}
+            size={52}
+          />
         </View>
         <View style={styles.dhMeta}>
           <Text style={styles.dhName}>
@@ -221,13 +225,17 @@ const styles = StyleSheet.create({
     ...Shadows.md,
   },
   dhCardHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  dhAvatar: {
-    width: 52, height: 52, borderRadius: 26,
-    alignItems: 'center', justifyContent: 'center',
+  dhAvatarWrap: {
+    width: 52,
+    height: 78,
     borderWidth: 3,
     borderColor: '#1F1F1F',
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  dhAvatarText: { fontSize: 22, fontWeight: '800', color: '#fff' },
   dhMeta: { flex: 1 },
   dhName: { fontSize: 17, fontWeight: '800', color: Colors.text },
   dhMode: { fontSize: 13, color: Colors.textSecondary, fontWeight: '600' },
