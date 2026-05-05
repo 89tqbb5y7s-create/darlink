@@ -18,9 +18,35 @@ export default defineSchema({
       v.union(v.literal("email"), v.literal("studentId"), v.literal("invite")),
     ),
     createdAt: v.number(),
+    // new for v2
+    selfPersonality: v.optional(v.string()),
+    vibePalette: v.optional(v.union(
+      v.literal("cream"),
+      v.literal("matcha"),
+      v.literal("peach"),
+      v.literal("lavender"),
+    )),
+    vibeKeywords: v.optional(v.array(v.string())),
+    aiTwinDisabled: v.optional(v.boolean()),
   })
     .index("by_email", ["email"])
     .index("by_school", ["school"]),
+
+  questionnaires: defineTable({
+    userId: v.id("users"),
+    mode: v.union(
+      v.literal("study"),
+      v.literal("friend"),
+      v.literal("romance"),
+    ),
+    background: v.any(),
+    needs: v.any(),
+    matching: v.any(),
+    raw: v.any(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_mode", ["userId", "mode"]),
 
   studentProfiles: defineTable({
     userId: v.id("users"),
@@ -62,7 +88,20 @@ export default defineSchema({
     privateFields: v.array(v.string()),
     version: v.number(),
     updatedAt: v.number(),
-  }).index("by_user", ["userId"]),
+    // new for v2
+    mode: v.optional(v.union(
+      v.literal("study"),
+      v.literal("friend"),
+      v.literal("romance"),
+    )),
+    systemPrompt: v.optional(v.string()),
+    pixelFeatures: v.optional(v.any()),
+    darwinScore: v.optional(v.number()),
+    darwinIterations: v.optional(v.number()),
+    createdAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_mode", ["userId", "mode"]),
 
   matches: defineTable({
     userIdA: v.id("users"),
