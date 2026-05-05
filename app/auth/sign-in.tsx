@@ -55,7 +55,7 @@ export default function SignInScreen() {
       const userId = await signInOrCreate({ email: email.trim(), nickname: nickname.trim(), school });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await signIn(userId as Id<'users'>);
-      router.replace('/onboarding/questionnaire');
+      router.replace('/(tabs)');
     } catch (e: unknown) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setError(e instanceof Error ? e.message : '登录失败，请重试');

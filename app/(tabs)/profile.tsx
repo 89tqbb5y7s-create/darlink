@@ -161,7 +161,7 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>我的画像</Text>
-              <PressableScale onPress={() => router.push('/onboarding/questionnaire')} style={styles.editBtn} haptic="light">
+              <PressableScale onPress={() => router.push('/(tabs)')} style={styles.editBtn} haptic="light">
                 <Text style={styles.editBtnText}>重新填写</Text>
               </PressableScale>
             </View>
@@ -172,7 +172,7 @@ export default function ProfileScreen() {
             <InfoRow label="目标" value={profile.socialGoal.join(' · ')} />
           </View>
         ) : (
-          <PressableScale onPress={() => router.push('/onboarding/questionnaire')} style={styles.ctaCard} haptic="medium">
+          <PressableScale onPress={() => router.push('/(tabs)')} style={styles.ctaCard} haptic="medium">
             <Text style={styles.ctaEmoji}>📝</Text>
             <Text style={styles.ctaText}>填写画像问卷，开始匹配</Text>
           </PressableScale>

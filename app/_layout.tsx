@@ -35,7 +35,9 @@ function RootNavigator() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="auth/sign-in" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding/questionnaire" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/study" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/friend" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/romance" options={{ headerShown: false }} />
         <Stack.Screen
           name="match/[matchId]"
           options={{ title: '匹配详情', headerBackTitle: '返回' }}
