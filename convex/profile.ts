@@ -190,6 +190,13 @@ export const getDigitalHumanByMode = internalQuery({
   },
 });
 
+export const getUserById = internalQuery({
+  args: { id: v.id("users") },
+  handler: async (ctx, { id }) => {
+    return await ctx.db.get(id);
+  },
+});
+
 export const insertDigitalHuman = internalMutation({
   args: {
     userId: v.id("users"),
