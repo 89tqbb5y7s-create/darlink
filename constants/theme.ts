@@ -67,6 +67,15 @@ export const Colors = {
   },
 };
 
+export const Stickers = {
+  cream:    { bg: '#FFF8E7', edge: '#1F1F1F', accent: '#E8B4B8' },
+  matcha:   { bg: '#D4E4BC', edge: '#1F1F1F', accent: '#7A9E5C' },
+  peach:    { bg: '#FFD6BA', edge: '#1F1F1F', accent: '#E07856' },
+  lavender: { bg: '#D8C5E8', edge: '#1F1F1F', accent: '#7C5CA8' },
+} as const;
+
+export type StickerPalette = keyof typeof Stickers;
+
 export const Radii = {
   sm: 8,
   md: 12,
@@ -103,13 +112,25 @@ export const Shadows = {
     elevation: 4,
   },
   lg: {
-    shadowColor: '#FF8FAB',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
+    shadowColor: '#1F1F1F',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
     elevation: 6,
   },
+  sticker: {
+    shadowColor: '#1F1F1F',
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
 };
+
+export const HandwrittenFonts = {
+  zh: 'MaShanZheng-Regular',
+  en: 'Caveat-Regular',
+} as const;
 
 export const Fonts = Platform.select({
   ios: {
