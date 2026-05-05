@@ -70,3 +70,19 @@ export const updateBasic = mutation({
     await ctx.db.patch(userId, cleaned);
   },
 });
+
+export const updateVibe = mutation({
+  args: {
+    userId: v.id("users"),
+    vibePalette: v.union(
+      v.literal("cream"),
+      v.literal("matcha"),
+      v.literal("peach"),
+      v.literal("lavender"),
+    ),
+    vibeKeywords: v.array(v.string()),
+  },
+  handler: async (ctx, { userId, vibePalette, vibeKeywords }) => {
+    await ctx.db.patch(userId, { vibePalette, vibeKeywords });
+  },
+});
