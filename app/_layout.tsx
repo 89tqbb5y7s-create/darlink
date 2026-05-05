@@ -21,8 +21,9 @@ function RootNavigator() {
   useEffect(() => {
     if (auth.status === 'loading') return;
 
-    const inAuthGroup = segments[0] === 'auth';
-    const screen = segments[1];
+    const segArr = segments as unknown as string[];
+    const inAuthGroup = segArr[0] === 'auth';
+    const screen = segArr[1];
     // Allow authenticated users to remain on step-2 / step-3 (mid-flow);
     // only step-1 (or undefined sub-screen) is the login entry that should
     // bounce them out to /(tabs).
@@ -33,7 +34,7 @@ function RootNavigator() {
     } else if (auth.status === 'authenticated' && onLoginEntry) {
       router.replace('/(tabs)');
     }
-  }, [auth.status, segments]);
+  }, [auth.status, segments, router]);
 
   return (
     <>
