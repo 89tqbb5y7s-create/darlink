@@ -54,6 +54,10 @@ function RootNavigator() {
           name="chat/[chatId]"
           options={{ title: '聊天', headerBackTitle: '返回' }}
         />
+        <Stack.Screen
+          name="digitalhuman/[userId]"
+          options={{ headerShown: false }}
+        />
       </Stack>
       <StatusBar style="auto" />
     </>
