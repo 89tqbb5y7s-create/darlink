@@ -128,13 +128,28 @@ export default function MatchScreen() {
                 </View>
               )}
 
-              {/* Status */}
+              {/* Status + AI twin entry */}
               <View style={styles.cardFooter}>
                 <Text style={styles.statusText}>
                   {item.match.aStatus === 'interested' && item.match.bStatus === 'interested'
                     ? '🎉 双向心动！去聊天'
                     : '查看详情 →'}
                 </Text>
+                {item.other?._id && item.otherCardText && (
+                  <PressableScale
+                    onPress={(e?: { stopPropagation?: () => void }) => {
+                      e?.stopPropagation?.();
+                      Haptics.selectionAsync();
+                      const aiMode = scene === 'food' ? 'friend' : scene;
+                      router.push(`/digitalhuman/${item.other!._id}?mode=${aiMode}` as never);
+                    }}
+                    haptic="none"
+                    scaleDown={0.96}
+                    style={[styles.aiTwinBtn, { borderColor: sc.border, backgroundColor: '#FCE38A' }]}
+                  >
+                    <Text style={styles.aiTwinBtnText}>🤖 和 TA 的 AI 聊聊</Text>
+                  </PressableScale>
+                )}
               </View>
             </PressableScale>
           );
@@ -204,6 +219,21 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radii.full, borderWidth: 1 },
   chipText: { fontSize: 12, fontWeight: '600' },
-  cardFooter: { borderTopWidth: 1, borderTopColor: Colors.borderLight, paddingTop: Spacing.sm },
+  cardFooter: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    paddingTop: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  aiTwinBtn: {
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  aiTwinBtnText: { fontSize: 12, fontWeight: '700', color: '#1F1F1F' },
   statusText: { fontSize: 12, color: Colors.textMuted, textAlign: 'right', fontWeight: '500' },
 });
