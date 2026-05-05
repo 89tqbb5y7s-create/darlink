@@ -1,4 +1,5 @@
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
@@ -34,7 +35,9 @@ function RootNavigator() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="auth/sign-in" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding/questionnaire" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/study" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/friend" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/romance" options={{ headerShown: false }} />
         <Stack.Screen
           name="match/[matchId]"
           options={{ title: '匹配详情', headerBackTitle: '返回' }}
@@ -50,6 +53,13 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    'MaShanZheng-Regular': require('../assets/fonts/MaShanZheng-Regular.ttf'),
+    'Caveat-Regular': require('../assets/fonts/Caveat-Regular.ttf'),
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <ConvexProvider client={convex}>
       <AuthProvider>

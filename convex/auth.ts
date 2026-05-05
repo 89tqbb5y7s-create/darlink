@@ -59,6 +59,7 @@ export const updateBasic = mutation({
     avatarUrl: v.optional(v.string()),
     major: v.optional(v.string()),
     grade: v.optional(v.string()),
+    selfPersonality: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { userId, ...patch } = args;

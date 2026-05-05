@@ -198,11 +198,25 @@ async function openAIMatchData(
 // ─── Main action ──────────────────────────────────────────────────────────────
 
 export const generateForUser = action({
-  args: { userId: v.id("users") },
+  args: {
+    userId: v.id("users"),
+    mode: v.optional(v.union(
+      v.literal("study"),
+      v.literal("friend"),
+      v.literal("romance"),
+    )),
+  },
   handler: async (
     ctx,
-    { userId },
+    { userId, mode },
   ): Promise<{ created: number; scenes: string[] }> => {
+    // TODO(v2): switch to reading from `questionnaires` (mode-keyed) when
+    // the home tab and onboarding screens fully migrate (Tasks 20-23).
+    // Until then, this engine reads `studentProfiles` (the v1 table) for
+    // scoring. Users who only have mode-keyed questionnaires (post-cutover
+    // new sign-ups for study/romance) will not generate matches until that
+    // rewrite. Friend-mode is unaffected because Task 12 migration backfills
+    // studentProfiles → questionnaires(mode='friend').
     // 1. Get user's profile
     const userProfile = await ctx.runQuery(api.profile.getProfile, { userId });
     if (!userProfile) return { created: 0, scenes: [] };
@@ -213,7 +227,11 @@ export const generateForUser = action({
       {},
     )) as Profile[];
 
-    const scenes = ["study", "food", "romance"] as const;
+    // Mode → scene mapping. friend semantically maps to the existing 'food' scene.
+    const MODE_TO_SCENE = { study: "study", friend: "food", romance: "romance" } as const;
+    const scenes: readonly ("study" | "food" | "romance")[] = mode
+      ? [MODE_TO_SCENE[mode]]
+      : ["study", "food", "romance"];
     const apiKey = process.env.OPENAI_API_KEY;
 
     let totalCreated = 0;
