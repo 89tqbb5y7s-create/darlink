@@ -1,5 +1,4 @@
 import { useAction, useQuery } from 'convex/react';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -13,8 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '../../convex/_generated/api';
 import { useAuth } from '@/src/lib/auth-context';
-import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
+import { Colors, Stickers, Shadows, Radii, Spacing } from '@/constants/theme';
 import { PressableScale } from '@/src/components/PressableScale';
+import { DoodleIcon, StickerCard, HandwrittenTitle } from '@/src/components/sticker';
 import * as Haptics from 'expo-haptics';
 
 function Tag({ text, color }: { text: string; color: string }) {
@@ -55,9 +55,14 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Background orbs */}
-      <View style={styles.orb1} pointerEvents="none" />
-      <View style={styles.orb2} pointerEvents="none" />
+      {/* Scattered doodles */}
+      <View style={styles.doodleLayer} pointerEvents="none">
+        <View style={[styles.doodle, { top: 40, right: 30 }]}><DoodleIcon name="star" size={32} color="#E8B4B8" /></View>
+        <View style={[styles.doodle, { top: 120, left: 24 }]}><DoodleIcon name="coffee" size={36} color="#7A9E5C" /></View>
+        <View style={[styles.doodle, { top: 220, right: 50 }]}><DoodleIcon name="sparkle" size={28} color="#E07856" /></View>
+        <View style={[styles.doodle, { bottom: 200, left: 40 }]}><DoodleIcon name="heart" size={30} color="#7C5CA8" /></View>
+        <View style={[styles.doodle, { bottom: 320, right: 30 }]}><DoodleIcon name="cloud" size={40} color="#E8B4B8" /></View>
+      </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
@@ -76,37 +81,36 @@ export default function HomeScreen() {
 
         {/* Step 1: No profile yet */}
         {!hasProfile && (
-          <View style={styles.stepCard}>
-            <LinearGradient
-              colors={['#FDF2F8', '#EEF2FF']}
-              style={styles.stepGrad}
-            >
-              <Text style={styles.stepEmoji}>📝</Text>
-              <Text style={styles.stepTitle}>第一步：完成画像问卷</Text>
-              <Text style={styles.stepDesc}>5 分钟轻量问卷，AI 帮你生成专属数字人名片，才能开始精准匹配</Text>
-              <PressableScale onPress={() => router.push('/onboarding/questionnaire')} style={styles.stepBtnWrap} haptic="medium" scaleDown={0.97}>
-                <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.stepBtn}>
-                  <Text style={styles.stepBtnText}>开始填写 ✦</Text>
-                </LinearGradient>
-              </PressableScale>
-            </LinearGradient>
-          </View>
+          <StickerCard palette="cream" rotation={-1} style={styles.stepCard}>
+            <Text style={styles.stepEmoji}>📝</Text>
+            <Text style={styles.stepTitle}>第一步：完成画像问卷</Text>
+            <Text style={styles.stepDesc}>5 分钟轻量问卷，AI 帮你生成专属数字人名片，才能开始精准匹配</Text>
+            <PressableScale onPress={() => router.push('/onboarding/questionnaire')} style={styles.stepBtnWrap} haptic="medium" scaleDown={0.97}>
+              <View style={styles.stepBtnSticker}>
+                <HandwrittenTitle size={18} color="#1F1F1F">开始填写</HandwrittenTitle>
+                <DoodleIcon name="sparkle" size={16} color="#1F1F1F" />
+              </View>
+            </PressableScale>
+          </StickerCard>
         )}
 
         {/* Step 2: Profile done, no digital human yet */}
         {hasProfile && !hasDH && (
-          <View style={styles.stepCard}>
-            <LinearGradient colors={['#FDF2F8', '#EEF2FF']} style={styles.stepGrad}>
-              <Text style={styles.stepEmoji}>🤖</Text>
-              <Text style={styles.stepTitle}>第二步：生成你的 AI 数字人</Text>
-              <Text style={styles.stepDesc}>AI 正在蒸馏你的性格画像，生成专属名片…</Text>
-              <PressableScale onPress={handleGenerate} disabled={generating} style={styles.stepBtnWrap} haptic="medium" scaleDown={0.97}>
-                <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.stepBtn, generating && { opacity: 0.5 }]}>
-                  {generating ? <ActivityIndicator color="#fff" /> : <Text style={styles.stepBtnText}>立即生成 ✦</Text>}
-                </LinearGradient>
-              </PressableScale>
-            </LinearGradient>
-          </View>
+          <StickerCard palette="cream" rotation={-1} style={styles.stepCard}>
+            <Text style={styles.stepEmoji}>🤖</Text>
+            <Text style={styles.stepTitle}>第二步：生成你的 AI 数字人</Text>
+            <Text style={styles.stepDesc}>AI 正在蒸馏你的性格画像，生成专属名片…</Text>
+            <PressableScale onPress={handleGenerate} disabled={generating} style={styles.stepBtnWrap} haptic="medium" scaleDown={0.97}>
+              <View style={[styles.stepBtnSticker, generating && { opacity: 0.5 }]}>
+                {generating ? <ActivityIndicator color="#1F1F1F" /> : (
+                  <>
+                    <HandwrittenTitle size={18} color="#1F1F1F">立即生成</HandwrittenTitle>
+                    <DoodleIcon name="sparkle" size={16} color="#1F1F1F" />
+                  </>
+                )}
+              </View>
+            </PressableScale>
+          </StickerCard>
         )}
 
         {/* Digital Human Card */}
@@ -115,11 +119,11 @@ export default function HomeScreen() {
             <View style={styles.dhCard}>
               <View style={styles.dhCardHeader}>
                 <View style={styles.dhAvatarWrap}>
-                  <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.dhAvatar}>
+                  <View style={styles.dhAvatar}>
                     <Text style={styles.dhAvatarText}>{user?.nickname?.[0] ?? '?'}</Text>
-                  </LinearGradient>
+                  </View>
                   <View style={styles.dhSparkle}>
-                    <Text style={{ fontSize: 10 }}>✦</Text>
+                    <DoodleIcon name="sparkle" size={10} color="#1F1F1F" />
                   </View>
                 </View>
                 <View style={styles.dhMeta}>
@@ -163,15 +167,10 @@ export default function HomeScreen() {
 
             {/* Go Match CTA */}
             <PressableScale onPress={() => router.push('/(tabs)/match')} style={styles.matchCtaWrap} haptic="heavy" scaleDown={0.97}>
-              <LinearGradient
-                colors={[Colors.gradientStart, Colors.gradientEnd]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.matchCta}
-              >
-                <Text style={styles.matchCtaText}>去看看谁和你匹配</Text>
-                <Text style={styles.matchCtaIcon}>✨</Text>
-              </LinearGradient>
+              <View style={styles.matchCta}>
+                <HandwrittenTitle size={18} color="#1F1F1F">去看看谁和你匹配</HandwrittenTitle>
+                <DoodleIcon name="sparkle" size={20} color="#1F1F1F" />
+              </View>
             </PressableScale>
           </>
         )}
@@ -182,14 +181,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
-  orb1: {
-    position: 'absolute', top: -40, right: -40, width: 220, height: 220,
-    borderRadius: 110, backgroundColor: Colors.pink, opacity: 0.10,
-  },
-  orb2: {
-    position: 'absolute', bottom: 120, left: -60, width: 200, height: 200,
-    borderRadius: 100, backgroundColor: Colors.blue, opacity: 0.08,
-  },
+  doodleLayer: { ...StyleSheet.absoluteFillObject },
+  doodle: { position: 'absolute', opacity: 0.6 },
   content: { padding: Spacing.lg, gap: Spacing.lg, paddingBottom: Spacing.xxl },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   greeting: { fontSize: 26, fontWeight: '800', color: Colors.text },
@@ -202,14 +195,24 @@ const styles = StyleSheet.create({
   },
   verifiedText: { fontSize: 12, color: Colors.success, fontWeight: '600' },
 
-  stepCard: { borderRadius: Radii['3xl'], overflow: 'hidden', ...Shadows.md },
-  stepGrad: { padding: Spacing.xl, alignItems: 'center', gap: Spacing.md },
+  stepCard: { gap: Spacing.md, alignItems: 'center' },
   stepEmoji: { fontSize: 48 },
   stepTitle: { fontSize: 18, fontWeight: '800', color: Colors.text, textAlign: 'center' },
   stepDesc: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
   stepBtnWrap: { width: '100%' },
-  stepBtn: { borderRadius: Radii.full, padding: Spacing.md, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 },
-  stepBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  stepBtnSticker: {
+    backgroundColor: Stickers.matcha.accent,
+    borderColor: '#1F1F1F',
+    borderWidth: 3,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    ...Shadows.sticker,
+  },
 
   dhCard: {
     backgroundColor: Colors.bgWhite,
@@ -222,7 +225,13 @@ const styles = StyleSheet.create({
   },
   dhCardHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   dhAvatarWrap: { position: 'relative' },
-  dhAvatar: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  dhAvatar: {
+    width: 52, height: 52, borderRadius: 26,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Stickers.peach.accent,
+    borderWidth: 3,
+    borderColor: '#1F1F1F',
+  },
   dhAvatarText: { fontSize: 22, fontWeight: '800', color: '#fff' },
   dhSparkle: {
     position: 'absolute', bottom: -2, right: -2,
@@ -265,14 +274,12 @@ const styles = StyleSheet.create({
   regenText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '600' },
   matchCtaWrap: { borderRadius: Radii.full, overflow: 'hidden' },
   matchCta: {
+    backgroundColor: Stickers.peach.accent,
+    borderColor: '#1F1F1F',
+    borderWidth: 3,
     padding: Spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderRadius: Radii.full,
-    ...Shadows.lg,
+    ...Shadows.sticker,
   },
-  matchCtaText: { fontSize: 16, color: '#fff', fontWeight: '800' },
-  matchCtaIcon: { fontSize: 18 },
 });
