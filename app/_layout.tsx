@@ -22,10 +22,15 @@ function RootNavigator() {
     if (auth.status === 'loading') return;
 
     const inAuthGroup = segments[0] === 'auth';
+    const screen = segments[1];
+    // Allow authenticated users to remain on step-2 / step-3 (mid-flow);
+    // only step-1 (or undefined sub-screen) is the login entry that should
+    // bounce them out to /(tabs).
+    const onLoginEntry = inAuthGroup && (screen === undefined || screen === 'step-1-email');
 
     if (auth.status === 'unauthenticated' && !inAuthGroup) {
-      router.replace('/auth/sign-in');
-    } else if (auth.status === 'authenticated' && inAuthGroup) {
+      router.replace('/auth/step-1-email');
+    } else if (auth.status === 'authenticated' && onLoginEntry) {
       router.replace('/(tabs)');
     }
   }, [auth.status, segments]);
@@ -34,7 +39,9 @@ function RootNavigator() {
     <>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="auth/sign-in" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/step-1-email" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/step-2-vibe" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/step-3-preview" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding/study" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding/friend" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding/romance" options={{ headerShown: false }} />
