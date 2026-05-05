@@ -170,4 +170,11 @@ export default defineSchema({
     blockedUserId: v.id("users"),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
+
+  aiPreviewQuota: defineTable({
+    userId: v.id("users"),
+    // YYYY-MM-DD, e.g., '2026-05-05'
+    day: v.string(),
+    count: v.number(),
+  }).index("by_user_day", ["userId", "day"]),
 });
