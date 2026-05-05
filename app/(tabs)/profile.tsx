@@ -8,6 +8,7 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -224,6 +225,30 @@ export default function ProfileScreen() {
           />
         </View>
 
+        {/* AI 分身设置 */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>AI 分身设置</Text>
+          </View>
+          <View style={styles.toggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.toggleLabel}>暂停 AI 分身</Text>
+              <Text style={styles.toggleHint}>
+                开启后，其他用户无法和你的 AI 分身预聊天（你仍可正常匹配 + 真人聊天）
+              </Text>
+            </View>
+            <Switch
+              value={user?.aiTwinDisabled === true}
+              onValueChange={async (v) => {
+                if (auth.status !== 'authenticated') return;
+                Haptics.selectionAsync();
+                await updateBasic({ userId: auth.userId, aiTwinDisabled: v });
+              }}
+              trackColor={{ true: '#FF6B9E' }}
+            />
+          </View>
+        </View>
+
         <PressableScale style={styles.signOutBtn} onPress={handleSignOut} haptic="medium">
           <Text style={styles.signOutText}>退出登录</Text>
         </PressableScale>
@@ -261,6 +286,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   cardTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    gap: Spacing.md,
+  },
+  toggleLabel: { fontSize: 14, fontWeight: '700', color: Colors.text, marginBottom: 2 },
+  toggleHint: { fontSize: 12, color: Colors.textSecondary, lineHeight: 16 },
 
   editBtn: {
     borderWidth: 1.5,

@@ -10,6 +10,7 @@
 
 import type * as activity from "../activity.js";
 import type * as ai from "../ai.js";
+import type * as aiPreview from "../aiPreview.js";
 import type * as auth from "../auth.js";
 import type * as chats from "../chats.js";
 import type * as lib_distill from "../lib/distill.js";
@@ -29,6 +30,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
   ai: typeof ai;
+  aiPreview: typeof aiPreview;
   auth: typeof auth;
   chats: typeof chats;
   "lib/distill": typeof lib_distill;

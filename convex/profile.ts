@@ -190,6 +190,13 @@ export const getDigitalHumanByMode = internalQuery({
   },
 });
 
+export const getUserById = internalQuery({
+  args: { id: v.id("users") },
+  handler: async (ctx, { id }) => {
+    return await ctx.db.get(id);
+  },
+});
+
 export const insertDigitalHuman = internalMutation({
   args: {
     userId: v.id("users"),
@@ -269,5 +276,12 @@ export const getModeStatus = query({
       if (m && m in status) status[m as keyof typeof status].digitalHuman = true;
     }
     return status;
+  },
+});
+
+export const updateDarwinProgress = internalMutation({
+  args: { id: v.id("digitalHumans"), iteration: v.number() },
+  handler: async (ctx, { id, iteration }) => {
+    await ctx.db.patch(id, { darwinIterations: iteration });
   },
 });

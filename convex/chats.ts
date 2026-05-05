@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const listForUser = query({
@@ -80,5 +80,39 @@ export const sendMessage = mutation({
 
     await ctx.db.patch(chatId, { lastMessageAt: Date.now() });
     return id;
+  },
+});
+
+const DAILY_LIMIT = 20;
+
+function todayKey(): string {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+export const checkAndIncrementQuota = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const day = todayKey();
+    const existing = await ctx.db
+      .query("aiPreviewQuota")
+      .withIndex("by_user_day", (q) => q.eq("userId", userId).eq("day", day))
+      .first();
+
+    const current = existing?.count ?? 0;
+    if (current >= DAILY_LIMIT) {
+      return { ok: false, count: current, limit: DAILY_LIMIT };
+    }
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { count: current + 1 });
+    } else {
+      await ctx.db.insert("aiPreviewQuota", {
+        userId,
+        day,
+        count: 1,
+      });
+    }
+    return { ok: true, count: current + 1, limit: DAILY_LIMIT };
   },
 });

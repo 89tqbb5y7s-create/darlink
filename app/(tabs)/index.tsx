@@ -2,6 +2,7 @@ import { useQuery } from 'convex/react';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -142,6 +143,40 @@ function DigitalHumanCard({
 }) {
   const router = useRouter();
   const meta = MODE_META.find((m) => m.key === mode)!;
+
+  const iter = (dh.darwinIterations ?? 0) as number;
+  const score = (dh.darwinScore ?? 0) as number;
+  const trainingInProgress = iter > 0 && score === 0;
+
+  if (trainingInProgress) {
+    return (
+      <View style={styles.dhCard}>
+        <View style={styles.dhCardHeader}>
+          <View style={styles.dhAvatarWrap}>
+            <PixelAvatar
+              features={isValidPixelFeatures(dh.pixelFeatures) ? dh.pixelFeatures : DEFAULT_FEATURES}
+              size={52}
+            />
+          </View>
+          <View style={styles.dhMeta}>
+            <Text style={styles.dhName}>
+              {userNickname} <Text style={styles.dhMode}>· {meta.label}</Text>
+            </Text>
+            <Text style={styles.dhSchool}>{userSchool}</Text>
+          </View>
+        </View>
+        <View style={styles.trainingBox}>
+          <ActivityIndicator color={Stickers[meta.palette].accent} />
+          <Text style={styles.trainingText}>AI 正在为你训练数字人…</Text>
+          <Text style={styles.trainingProgress}>
+            {[1, 2, 3, 4].map((i) => (i <= iter ? '●' : '○')).join(' ')}
+          </Text>
+          <Text style={styles.trainingSub}>大约 30 秒，你也可以稍后回来看</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.dhCard}>
       <View style={styles.dhCardHeader}>
@@ -261,6 +296,12 @@ const styles = StyleSheet.create({
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radii.full, borderWidth: 1 },
   tagText: { fontSize: 12, fontWeight: '600' },
+
+  // Training progress shell
+  trainingBox: { alignItems: 'center', gap: 8, padding: Spacing.md },
+  trainingText: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  trainingProgress: { fontSize: 18, color: Colors.textBody, letterSpacing: 4 },
+  trainingSub: { fontSize: 11, color: Colors.textMuted, textAlign: 'center' },
 
   // Match CTA
   matchCtaWrap: { borderRadius: Radii.full, overflow: 'hidden' },
