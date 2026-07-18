@@ -1,0 +1,101 @@
+name: Temporary 2023 corpus source fetch
+
+on:
+  push:
+    branches:
+      - tmp-corpus-2023-fetch
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Collect openly licensed 2023 Chinese sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p payload/linux-cn payload/teatang payload/reports payload/globalvoices
+
+          git clone --depth 1 https://github.com/Linux-CN/archive.git linux-cn-source
+          test -d linux-cn-source/content/posts/2023
+          cp -a linux-cn-source/content/posts/2023 payload/linux-cn/posts
+          cp linux-cn-source/LICENSE payload/linux-cn/LICENSE
+          cp linux-cn-source/README.md payload/linux-cn/README.md
+
+          git clone --depth 1 https://github.com/teatang/t-blog.git teatang-source
+          if [ -d teatang-source/source/_posts ]; then
+            cp -a teatang-source/source/_posts payload/teatang/posts
+          fi
+          cp teatang-source/README.md payload/teatang/README.md || true
+          cp teatang-source/LICENSE payload/teatang/LICENSE 2>/dev/null || true
+
+          curl -L --fail --retry 3 -A 'Mozilla/5.0' \
+            -o payload/reports/worldbank-china-economic-update-dec2023-cn.pdf \
+            'https://thedocs.worldbank.org/en/doc/cf9176cd43651d715f633b0a3f7791b3-0070012023/original/China-Economic-Update-Dec23-CN.pdf'
+
+          curl -L --fail --retry 3 -A 'Mozilla/5.0' \
+            -o payload/reports/fao-sofa-2023-cn.pdf \
+            'https://www.fao.org/3/cc7724zh/cc7724zh.pdf'
+
+          curl -L --fail --retry 3 -A 'Mozilla/5.0' \
+            -o payload/reports/fao-sofa-2023-brief-cn.pdf \
+            'https://www.fao.org/3/cc7937zh/cc7937zh.pdf'
+
+          curl -L --fail --retry 3 -A 'Mozilla/5.0' \
+            -o payload/reports/unesco-efw-2023-cn.download \
+            'https://doi.org/10.54676/VBOI1852' || true
+
+          python3 - <<'PY'
+          import json, pathlib, urllib.parse, urllib.request
+          out = pathlib.Path('payload/globalvoices')
+          headers = {'User-Agent': 'Mozilla/5.0 corpus-research/1.0'}
+          all_rows = []
+          for page in range(1, 30):
+              params = urllib.parse.urlencode({
+                  'after': '2023-01-01T00:00:00',
+                  'before': '2024-01-01T00:00:00',
+                  'per_page': 100,
+                  'page': page,
+                  '_fields': 'id,date,modified,link,slug,title,content,excerpt,author,categories,tags',
+              })
+              url = 'https://zh.globalvoices.org/wp-json/wp/v2/posts?' + params
+              try:
+                  req = urllib.request.Request(url, headers=headers)
+                  with urllib.request.urlopen(req, timeout=45) as resp:
+                      rows = json.load(resp)
+              except Exception as exc:
+                  print('Global Voices pagination stopped:', page, repr(exc))
+                  break
+              if not rows:
+                  break
+              all_rows.extend(rows)
+              if len(rows) < 100:
+                  break
+          (out / 'posts-2023.json').write_text(json.dumps(all_rows, ensure_ascii=False, indent=2), encoding='utf-8')
+          print('Global Voices rows:', len(all_rows))
+          PY
+
+          {
+            echo 'Fetch completed (UTC):' "$(date -u +%FT%TZ)"
+            echo 'Linux-CN source: https://github.com/Linux-CN/archive'
+            echo 'Teatang source: https://github.com/teatang/t-blog'
+            echo 'Global Voices API: https://zh.globalvoices.org/wp-json/wp/v2/posts'
+            echo 'World Bank report: China Economic Update December 2023 (Chinese)'
+            echo 'FAO report: The State of Food and Agriculture 2023 (Chinese)'
+            echo 'UNESCO DOI: 10.54676/VBOI1852'
+            echo
+            find payload -maxdepth 3 -type f -printf '%p\t%s bytes\n' | sort
+            echo
+            file payload/reports/* || true
+          } > payload/FETCH_INFO.txt
+
+      - name: Upload source bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-licensed-2023-cn-sources
+          path: payload
+          retention-days: 1
+          compression-level: 9
