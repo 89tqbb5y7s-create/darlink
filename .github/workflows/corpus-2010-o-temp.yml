@@ -1,16 +1,17 @@
 name: Temporary 2010 O Corpus Build
 
 on:
-  push:
-    branches:
-      - corpus-2010-o-temp-20260723
   pull_request:
     branches:
       - main
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: temporary-2010-o-corpus
+  cancel-in-progress: true
+
 permissions:
-  contents: write
+  contents: read
 
 env:
   PYTHONUTF8: "1"
@@ -18,7 +19,7 @@ env:
 jobs:
   build-corpus:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 20
     steps:
       - name: Checkout temporary corpus code
         uses: actions/checkout@v4
@@ -28,14 +29,14 @@ jobs:
       - name: Install parser dependencies
         run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml
 
-      - name: Build and validate corpus
-        run: python scripts/corpus_2010_o_temp.py
+      - name: Build and validate expanded corpus
+        run: python scripts/corpus_2010_o_temp_v2.py
 
       - name: Upload corpus data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: 2010-o-corpus-data
+          name: 2010-o-corpus-data-v2
           path: out/**
           if-no-files-found: warn
           retention-days: 1
