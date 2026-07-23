@@ -19,7 +19,7 @@ env:
 jobs:
   build-corpus:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
       - name: Checkout temporary corpus code
         uses: actions/checkout@v4
@@ -29,14 +29,14 @@ jobs:
       - name: Install parser dependencies
         run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml trafilatura
 
-      - name: Build final licensed multi-source corpus
-        run: python scripts/corpus_2010_o_temp_v5.py
+      - name: Fetch verified 2010 replacement articles
+        run: python scripts/fetch_moonlight_selected.py
 
-      - name: Upload corpus data
+      - name: Upload replacement data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: 2010-o-corpus-data-v5
-          path: out/**
+          name: moonlight-2010-selected
+          path: out_moon/**
           if-no-files-found: warn
           retention-days: 1
