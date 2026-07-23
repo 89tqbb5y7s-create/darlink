@@ -19,7 +19,7 @@ env:
 jobs:
   build-corpus:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout temporary corpus code
         uses: actions/checkout@v4
@@ -27,16 +27,16 @@ jobs:
           fetch-depth: 1
 
       - name: Install parser dependencies
-        run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml
+        run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml trafilatura
 
-      - name: Build strict original-author corpus
-        run: python scripts/corpus_2010_o_temp_v4.py
+      - name: Build final licensed multi-source corpus
+        run: python scripts/corpus_2010_o_temp_v5.py
 
       - name: Upload corpus data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: 2010-o-corpus-data-v4
+          name: 2010-o-corpus-data-v5
           path: out/**
           if-no-files-found: warn
           retention-days: 1
