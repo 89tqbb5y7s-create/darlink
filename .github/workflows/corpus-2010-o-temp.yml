@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - corpus-2010-o-temp-20260723
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -16,10 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Checkout temporary branch
+      - name: Checkout temporary corpus code
         uses: actions/checkout@v4
         with:
-          ref: corpus-2010-o-temp-20260723
           fetch-depth: 1
 
       - name: Install parser dependencies
@@ -36,7 +39,3 @@ jobs:
           path: out/**
           if-no-files-found: warn
           retention-days: 1
-
-      - name: Remove temporary branch
-        if: always()
-        run: git push origin --delete "${GITHUB_REF_NAME}" || true
