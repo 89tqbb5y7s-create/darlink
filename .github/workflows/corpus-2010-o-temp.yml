@@ -1,0 +1,42 @@
+name: Temporary 2010 O Corpus Build
+
+on:
+  push:
+    branches:
+      - corpus-2010-o-temp-20260723
+
+permissions:
+  contents: write
+
+env:
+  PYTHONUTF8: "1"
+
+jobs:
+  build-corpus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout temporary branch
+        uses: actions/checkout@v4
+        with:
+          ref: corpus-2010-o-temp-20260723
+          fetch-depth: 1
+
+      - name: Install parser dependencies
+        run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml
+
+      - name: Build and validate corpus
+        run: python scripts/corpus_2010_o_temp.py
+
+      - name: Upload corpus data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 2010-o-corpus-data
+          path: out/**
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Remove temporary branch
+        if: always()
+        run: git push origin --delete "${GITHUB_REF_NAME}" || true
