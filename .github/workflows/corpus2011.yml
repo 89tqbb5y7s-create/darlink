@@ -1,0 +1,23 @@
+name: Build 2011 O corpus
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/corpus2011/**'
+      - '.github/workflows/corpus2011.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests beautifulsoup4 lxml
+      - run: python tools/corpus2011/build_corpus.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: corpus-2011-o
+          path: 2011_O_raw_artifact.zip
+          if-no-files-found: error
+          retention-days: 1
