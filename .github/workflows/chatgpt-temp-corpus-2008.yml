@@ -5,13 +5,13 @@ on:
     branches:
       - chatgpt-temp-corpus-2008
     paths:
-      - scripts/chatgpt_corpus_2008.py
+      - scripts/chatgpt_corpus_2008_v2.py
       - .github/workflows/chatgpt-temp-corpus-2008.yml
   pull_request:
     branches:
       - main
     paths:
-      - scripts/chatgpt_corpus_2008.py
+      - scripts/chatgpt_corpus_2008_v2.py
       - .github/workflows/chatgpt-temp-corpus-2008.yml
   workflow_dispatch:
 
@@ -38,12 +38,12 @@ jobs:
         run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml trafilatura
 
       - name: Build and validate corpus
-        run: python scripts/chatgpt_corpus_2008.py
+        run: python scripts/chatgpt_corpus_2008_v2.py
 
       - name: Upload corpus payload
         uses: actions/upload-artifact@v4
         with:
-          name: 2008-O-corpus-payload
+          name: 2008-O-corpus-payload-v2
           path: 2008_O_payload.zip
           if-no-files-found: error
           compression-level: 0
