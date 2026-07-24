@@ -7,6 +7,12 @@ on:
     paths:
       - scripts/chatgpt_corpus_2008.py
       - .github/workflows/chatgpt-temp-corpus-2008.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/chatgpt_corpus_2008.py
+      - .github/workflows/chatgpt-temp-corpus-2008.yml
   workflow_dispatch:
 
 permissions:
