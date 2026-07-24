@@ -14,12 +14,20 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Cancel obsolete corpus runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for run_id in 30063503726 30063517605 30063908480 30064088160; do
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" || true
+          done
       - uses: actions/checkout@v4
         with:
           ref: tmp-corpus-2013-build
