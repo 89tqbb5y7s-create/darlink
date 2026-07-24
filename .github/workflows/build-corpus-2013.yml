@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -25,19 +25,29 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: python -m pip install -q requests beautifulsoup4 lxml opencc-python-reimplemented markdown
-      - name: Build corpus and retain diagnostics
+      - name: Build corpus
+        id: corpus
         shell: bash
         run: |
-          # Build on the temporary branch so diagnostics can be persisted safely.
-          mkdir -p build/2013_O
           set +e
-          python tools/build_corpus_2013.py > build/2013_O/build.log 2>&1
+          python tools/build_corpus_2013.py > /tmp/2013_O_build.log 2>&1
           rc=$?
+          mkdir -p build/2013_O
+          cp /tmp/2013_O_build.log build/2013_O/build.log
           echo "$rc" > build/2013_O/exit_code.txt
-          zip -qr build/2013_O_debug.zip build/2013_O
-          git config user.name "corpus-build-bot"
-          git config user.email "corpus-build-bot@users.noreply.github.com"
-          git add -f build/2013_O build/2013_O_debug.zip
-          git commit -m "Store 2013 corpus build diagnostics" || true
-          git push origin HEAD:tmp-corpus-2013-build
-          exit $rc
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Upload corpus and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 2013_O_corpus
+          path: build/2013_O
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce QA result
+        if: always()
+        run: |
+          rc='${{ steps.corpus.outputs.exit_code }}'
+          test -n "$rc" || rc=1
+          exit "$rc"
