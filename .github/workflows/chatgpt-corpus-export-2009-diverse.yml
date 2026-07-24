@@ -1,0 +1,78 @@
+name: ChatGPT Corpus 2009 Diverse Export
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone LinuxTOY source
+        run: git clone --depth 1 https://github.com/LinuxTOY/linuxtoy.org.git linuxtoy
+
+      - name: Export 2009 LinuxTOY and Global Voices data
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p export/linuxtoy_2009
+          python - <<'PY'
+          from pathlib import Path
+          import json, re, urllib.parse, urllib.request
+
+          # LinuxTOY: select source Markdown by first publication date.
+          selected = []
+          for p in Path('linuxtoy/content').rglob('*.md'):
+              text = p.read_text(encoding='utf-8', errors='replace')
+              if re.search(r'(?mi)^Date:\s*2009[-/]', text):
+                  target = Path('export/linuxtoy_2009') / p.name
+                  target.write_text(text, encoding='utf-8')
+                  selected.append(p.name)
+          Path('export/LINUXTOY_FILE_LIST.txt').write_text('\n'.join(sorted(selected)) + '\n', encoding='utf-8')
+          print('LinuxTOY files:', len(selected))
+
+          # Global Voices Simplified Chinese: WordPress REST API, full rendered body.
+          base = 'https://zhs.globalvoices.org/wp-json/wp/v2/posts'
+          posts = []
+          page = 1
+          total_pages = None
+          while True:
+              params = {
+                  'after': '2009-01-01T00:00:00',
+                  'before': '2010-01-01T00:00:00',
+                  'per_page': 100,
+                  'page': page,
+                  '_fields': 'id,date,link,slug,title,content,author',
+              }
+              url = base + '?' + urllib.parse.urlencode(params)
+              req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 corpus-research/1.0'})
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  batch = json.loads(r.read().decode('utf-8'))
+                  if total_pages is None:
+                      total_pages = int(r.headers.get('X-WP-TotalPages', '1'))
+              posts.extend(batch)
+              print('Global Voices page', page, 'items', len(batch), 'of', total_pages)
+              if page >= total_pages:
+                  break
+              page += 1
+          Path('export/globalvoices_2009_posts.json').write_text(
+              json.dumps(posts, ensure_ascii=False, indent=2), encoding='utf-8')
+          print('Global Voices posts:', len(posts))
+
+          if len(selected) < 20:
+              raise SystemExit('unexpectedly few LinuxTOY 2009 files')
+          if len(posts) < 20:
+              raise SystemExit('unexpectedly few Global Voices 2009 posts')
+          PY
+          (cd export && zip -q -r ../diverse-2009-source.zip .)
+
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: diverse-2009-source
+          path: diverse-2009-source.zip
+          retention-days: 1
