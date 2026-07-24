@@ -3,11 +3,12 @@ name: Build 2013 O Corpus
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened]
+    types: [reopened]
     paths:
       - '.github/workflows/build-corpus-2013.yml'
       - 'tools/build_corpus_2013.py'
       - 'tools/build_corpus_2013_v2.py'
+      - 'tools/build_corpus_2013_v3.py'
   workflow_dispatch:
 
 permissions:
@@ -16,7 +17,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,7 +32,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          python tools/build_corpus_2013_v2.py > /tmp/2013_O_build.log 2>&1
+          python tools/build_corpus_2013_v3.py > /tmp/2013_O_build.log 2>&1
           rc=$?
           mkdir -p build/2013_O
           cp /tmp/2013_O_build.log build/2013_O/build.log
