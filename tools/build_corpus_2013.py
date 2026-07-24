@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Temporary isolated 2013 corpus builder. Do not merge into the main application.
+# Reopened-event trigger revision.
 import csv, hashlib, html, json, re, shutil, subprocess, time
 from pathlib import Path
 from urllib.parse import quote, urljoin
