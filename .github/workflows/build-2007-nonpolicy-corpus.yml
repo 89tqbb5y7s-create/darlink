@@ -29,7 +29,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          python tools/build_2007_nonpolicy_corpus_v3.py 2>&1 | tee corpus-build.log
+          python tools/build_2007_nonpolicy_corpus_v4.py 2>&1 | tee corpus-build.log
           status=${PIPESTATUS[0]}
           mkdir -p corpus_build
           cp corpus-build.log corpus_build/BUILD_LOG.txt
