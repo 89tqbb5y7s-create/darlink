@@ -10,6 +10,8 @@ const modeUnion = v.union(
   v.literal("romance"),
 );
 
+const MAX_MESSAGE_LENGTH = 500;
+
 export const aiPreview = action({
   args: {
     callerId: v.id("users"),
@@ -21,7 +23,14 @@ export const aiPreview = action({
     ctx,
     { callerId, targetUserId, mode, message },
   ): Promise<{ reply: string; quotaUsed: number; quotaLimit: number }> => {
-    if (!message.trim()) throw new Error("消息不能为空");
+    const normalizedMessage = message.trim();
+    if (!normalizedMessage) throw new Error("消息不能为空");
+    if (normalizedMessage.length > MAX_MESSAGE_LENGTH) {
+      throw new Error(`消息不能超过 ${MAX_MESSAGE_LENGTH} 字`);
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("AI 服务尚未配置");
 
     // 1. Check target user not opted out
     const target = await ctx.runQuery(
@@ -52,22 +61,27 @@ export const aiPreview = action({
       throw new Error(`今日 AI 分身预览额度已用完 (${quota.limit}/天)`);
     }
 
-    // 4. LLM call
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
+    // 4. 调用上游服务；失败时归还刚刚预占的额度。
+    try {
+      const reply = await callTwinLLM(apiKey, dh.systemPrompt, normalizedMessage);
       return {
-        reply: "[未配置 OPENAI_API_KEY，无法生成 AI 回复]",
+        reply,
         quotaUsed: quota.count,
         quotaLimit: quota.limit,
       };
+    } catch (error) {
+      console.error("[aiPreview] 上游服务调用失败:", error);
+      try {
+        await ctx.runMutation(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (internal as any).chats.refundQuota,
+          { userId: callerId },
+        );
+      } catch (refundError) {
+        console.error("[aiPreview] 归还配额失败:", refundError);
+      }
+      throw new Error("AI 暂时无法回复，请稍后重试");
     }
-
-    const reply = await callTwinLLM(apiKey, dh.systemPrompt, message);
-    return {
-      reply: reply ?? "[AI 暂时没有回复]",
-      quotaUsed: quota.count,
-      quotaLimit: quota.limit,
-    };
   },
 });
 
@@ -75,7 +89,7 @@ async function callTwinLLM(
   apiKey: string,
   systemPrompt: string,
   userMessage: string,
-): Promise<string | null> {
+): Promise<string> {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -95,7 +109,9 @@ async function callTwinLLM(
       max_tokens: 200,
     }),
   });
-  if (!res.ok) return null;
+  if (!res.ok) throw new Error(`OpenAI ${res.status}`);
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  return data.choices?.[0]?.message?.content?.trim() ?? null;
+  const reply = data.choices?.[0]?.message?.content?.trim();
+  if (!reply) throw new Error("OpenAI 返回了空回复");
+  return reply;
 }
