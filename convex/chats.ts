@@ -116,3 +116,23 @@ export const checkAndIncrementQuota = internalMutation({
     return { ok: true, count: current + 1, limit: DAILY_LIMIT };
   },
 });
+
+export const refundQuota = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const day = todayKey();
+    const existing = await ctx.db
+      .query("aiPreviewQuota")
+      .withIndex("by_user_day", (q) => q.eq("userId", userId).eq("day", day))
+      .first();
+
+    if (!existing) return;
+
+    // 上游服务失败时归还本次预占的额度，避免临时故障消耗用户配额。
+    if (existing.count <= 1) {
+      await ctx.db.delete(existing._id);
+    } else {
+      await ctx.db.patch(existing._id, { count: existing.count - 1 });
+    }
+  },
+});
